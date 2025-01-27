@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Domain", "HydroMeasure.Domain\HydroMeasure.Domain.csproj", "{C67211EA-8C51-4A2D-969C-8830878674F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Application", "HydroMeasure.Application\HydroMeasure.Application.csproj", "{53D61A3E-CAAE-4339-9120-986DF6245D1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Infrastructure", "HydroMeasure.Infrastructure\HydroMeasure.Infrastructure.csproj", "{DB345723-661A-4CD2-B04B-516DFC30D26F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Api", "HydroMeasure.Api\HydroMeasure.Api.csproj", "{0266FC90-AE7E-4BE6-8082-10BE4FE0CC09}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Shared", "HydroMeasure.Shared\HydroMeasure.Shared.csproj", "{4BA3AF44-5A51-4129-98AF-943CA2E42192}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Tests", "HydroMeasure.Tests\HydroMeasure.Tests.csproj", "{53C06D4A-89AF-4F26-95E5-9C41E4B977C8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C67211EA-8C51-4A2D-969C-8830878674F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C67211EA-8C51-4A2D-969C-8830878674F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C67211EA-8C51-4A2D-969C-8830878674F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C67211EA-8C51-4A2D-969C-8830878674F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53D61A3E-CAAE-4339-9120-986DF6245D1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53D61A3E-CAAE-4339-9120-986DF6245D1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53D61A3E-CAAE-4339-9120-986DF6245D1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53D61A3E-CAAE-4339-9120-986DF6245D1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB345723-661A-4CD2-B04B-516DFC30D26F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB345723-661A-4CD2-B04B-516DFC30D26F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB345723-661A-4CD2-B04B-516DFC30D26F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB345723-661A-4CD2-B04B-516DFC30D26F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0266FC90-AE7E-4BE6-8082-10BE4FE0CC09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0266FC90-AE7E-4BE6-8082-10BE4FE0CC09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0266FC90-AE7E-4BE6-8082-10BE4FE0CC09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0266FC90-AE7E-4BE6-8082-10BE4FE0CC09}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BA3AF44-5A51-4129-98AF-943CA2E42192}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BA3AF44-5A51-4129-98AF-943CA2E42192}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BA3AF44-5A51-4129-98AF-943CA2E42192}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BA3AF44-5A51-4129-98AF-943CA2E42192}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53C06D4A-89AF-4F26-95E5-9C41E4B977C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53C06D4A-89AF-4F26-95E5-9C41E4B977C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53C06D4A-89AF-4F26-95E5-9C41E4B977C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53C06D4A-89AF-4F26-95E5-9C41E4B977C8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
