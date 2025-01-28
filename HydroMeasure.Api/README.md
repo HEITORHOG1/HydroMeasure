@@ -12,3 +12,6 @@ To install the project, you need to have the following tools installed:
    
    dotnet ef database update --project HydroMeasure.Infrastructure --startup-project HydroMeasure.Api
    
+
+   dotnet ef migrations add FirstMigrations --project HydroMeasure.Infrastructure --startup-project HydroMeasure.Api
+dotnet ef database update --project HydroMeasure.Infrastructure --startup-project HydroMeasure.Api
