@@ -49,7 +49,7 @@ namespace HydroMeasure.Domain.Entities
             TelefoneSindico = telefoneSindico;
             EmailSindico = emailSindico;
             Ativo = ativo;
-            DataAlteracao = DateTime.Now;
+            DataAlteracao = DateTime.UtcNow;
         }
     }
 }

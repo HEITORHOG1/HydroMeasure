@@ -7,6 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Commands\AddCustomer\**" />
+    <Compile Remove="Commands\UpdateCustomer\**" />
+    <Compile Remove="Queries\GetAllCustomers\**" />
+    <Compile Remove="Queries\GetCustomerById\**" />
+    <EmbeddedResource Remove="Commands\AddCustomer\**" />
+    <EmbeddedResource Remove="Commands\UpdateCustomer\**" />
+    <EmbeddedResource Remove="Queries\GetAllCustomers\**" />
+    <EmbeddedResource Remove="Queries\GetCustomerById\**" />
+    <None Remove="Commands\AddCustomer\**" />
+    <None Remove="Commands\UpdateCustomer\**" />
+    <None Remove="Queries\GetAllCustomers\**" />
+    <None Remove="Queries\GetCustomerById\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="MediatR" Version="12.4.1" />
@@ -15,16 +30,17 @@
 
   <ItemGroup>
     <Folder Include="Behaviors\" />
-    <Folder Include="Commands\AddCustomer\" />
-    <Folder Include="Commands\UpdateCustomer\" />
     <Folder Include="DTOs\" />
     <Folder Include="EventHandlers\" />
     <Folder Include="GrpcContracts\" />
     <Folder Include="Interfaces\" />
     <Folder Include="Mappings\" />
-    <Folder Include="Queries\GetAllCustomers\" />
-    <Folder Include="Queries\GetCustomerById\" />
     <Folder Include="Validations\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HydroMeasure.Domain\HydroMeasure.Domain.csproj" />
+    <ProjectReference Include="..\HydroMeasure.Shared\HydroMeasure.Shared.csproj" />
   </ItemGroup>
 
 </Project>

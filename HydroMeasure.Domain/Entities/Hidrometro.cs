@@ -40,7 +40,7 @@ namespace HydroMeasure.Domain.Entities
             DataInstalacao = dataInstalacao;
             Ativo = ativo;
             Status = status;
-            DataAlteracao = DateTime.Now;
+            DataAlteracao = DateTime.UtcNow;
         }
     }
 }

@@ -40,7 +40,7 @@ namespace HydroMeasure.Domain.Entities
             DataLeitura = dataLeitura;
             Consumo = consumo;
             LeituraAnteriorId = leituraAnteriorId;
-            DataAlteracao = DateTime.Now;
+            DataAlteracao = DateTime.UtcNow;
         }
     }
 }

@@ -44,7 +44,7 @@ namespace HydroMeasure.Domain.Entities
             Senha = senha;
             Perfil = perfil;
             Ativo = ativo;
-            DataAlteracao = DateTime.Now;
+            DataAlteracao = DateTime.UtcNow;
         }
     }
 }

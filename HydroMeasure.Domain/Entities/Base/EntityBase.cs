@@ -9,7 +9,7 @@
         protected EntityBase()
         {
             Id = Guid.NewGuid();
-            DataCadastro = DateTime.Now;
+            DataCadastro = DateTime.UtcNow;
         }
     }
 }

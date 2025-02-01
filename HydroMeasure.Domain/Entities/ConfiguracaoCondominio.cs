@@ -33,7 +33,7 @@ namespace HydroMeasure.Domain.Entities
             FormatoRelatorio = formatoRelatorio;
             PeriodicidadeAlerta = periodicidadeAlerta;
             ValorMetroCubico = valorMetroCubico;
-            DataAlteracao = DateTime.Now;
+            DataAlteracao = DateTime.UtcNow;
         }
     }
 }

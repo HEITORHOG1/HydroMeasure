@@ -31,7 +31,7 @@ namespace HydroMeasure.Domain.Entities
             Periodo = periodo;
             Conteudo = conteudo;
             UsuarioId = usuarioId;
-            DataAlteracao = DateTime.Now;
+            DataAlteracao = DateTime.UtcNow;
         }
     }
 }

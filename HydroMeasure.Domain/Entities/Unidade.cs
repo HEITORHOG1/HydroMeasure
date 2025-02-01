@@ -51,7 +51,7 @@ namespace HydroMeasure.Domain.Entities
             MediaConsumo = mediaConsumo;
             Ativo = ativo;
             Status = status;
-            DataAlteracao = DateTime.Now;
+            DataAlteracao = DateTime.UtcNow;
         }
     }
 }

@@ -44,7 +44,7 @@ namespace HydroMeasure.Domain.Entities
             DataAlerta = dataAlerta;
             Resolvido = resolvido;
             UsuarioResolvidoId = usuarioResolvidoId;
-            DataAlteracao = DateTime.Now;
+            DataAlteracao = DateTime.UtcNow;
         }
     }
 }
