@@ -18,6 +18,7 @@ namespace HydroMeasure.Application.Commands.Condominios.Delete
 
         public async Task<OperationResult<bool>> Handle(DeleteCondominioCommand request, CancellationToken cancellationToken)
         {
+            // Tenta recuperar o condomínio pelo ID informado.
             var condominio = await _condominioRepository.GetByIdAsync(request.Id);
             if (condominio == null)
             {
@@ -29,6 +30,7 @@ namespace HydroMeasure.Application.Commands.Condominios.Delete
                 };
             }
 
+            // Remove o condomínio e persiste as alterações.
             await _condominioRepository.Remove(condominio);
             await _unitOfWork.SaveChangesAsync();
 

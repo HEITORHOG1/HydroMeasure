@@ -1,4 +1,5 @@
-﻿using HydroMeasure.Domain.Entities;
+﻿using AutoMapper;
+using HydroMeasure.Application.DTOs;
 using HydroMeasure.Domain.Repositories;
 using HydroMeasure.Domain.Repositories.Base;
 using HydroMeasure.Shared;
@@ -6,23 +7,28 @@ using MediatR;
 
 namespace HydroMeasure.Application.Commands.Condominios.Update
 {
-    public class UpdateCondominioCommandHandler : IRequestHandler<UpdateCondominioCommand, OperationResult<Condominio>>
+    public class UpdateCondominioCommandHandler : IRequestHandler<UpdateCondominioCommand, OperationResult<CondominioDto>>
     {
         private readonly ICondominioRepository _condominioRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public UpdateCondominioCommandHandler(ICondominioRepository condominioRepository, IUnitOfWork unitOfWork)
+        public UpdateCondominioCommandHandler(
+            ICondominioRepository condominioRepository,
+            IUnitOfWork unitOfWork,
+            IMapper mapper)
         {
             _condominioRepository = condominioRepository;
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
-        public async Task<OperationResult<Condominio>> Handle(UpdateCondominioCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<CondominioDto>> Handle(UpdateCondominioCommand request, CancellationToken cancellationToken)
         {
             var condominio = await _condominioRepository.GetByIdAsync(request.Id);
             if (condominio == null)
             {
-                return new OperationResult<Condominio>
+                return new OperationResult<CondominioDto>
                 {
                     Success = false,
                     Message = "Condomínio não encontrado."
@@ -42,10 +48,13 @@ namespace HydroMeasure.Application.Commands.Condominios.Update
 
             await _unitOfWork.SaveChangesAsync();
 
-            return new OperationResult<Condominio>
+            // Mapeia a entidade atualizada para o DTO
+            var condominioDto = _mapper.Map<CondominioDto>(condominio);
+
+            return new OperationResult<CondominioDto>
             {
                 Success = true,
-                Data = condominio,
+                Data = condominioDto,
                 Message = "Condomínio atualizado com sucesso."
             };
         }

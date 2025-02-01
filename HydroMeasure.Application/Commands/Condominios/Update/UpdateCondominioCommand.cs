@@ -1,10 +1,10 @@
-﻿using HydroMeasure.Domain.Entities;
+﻿using HydroMeasure.Application.DTOs;
 using HydroMeasure.Shared;
 using MediatR;
 
 namespace HydroMeasure.Application.Commands.Condominios.Update
 {
-    public class UpdateCondominioCommand : IRequest<OperationResult<Condominio>>
+    public class UpdateCondominioCommand : IRequest<OperationResult<CondominioDto>>
     {
         public Guid Id { get; set; }
         public string Nome { get; set; } = string.Empty;

@@ -1,9 +1,9 @@
-﻿using HydroMeasure.Domain.Entities;
+﻿using HydroMeasure.Application.DTOs;
 using MediatR;
 
 namespace HydroMeasure.Application.Queries.Condominios.Get
 {
-    public class GetCondominioByIdQuery : IRequest<Condominio?>
+    public class GetCondominioByIdQuery : IRequest<CondominioDto?>
     {
         public Guid Id { get; }
 

@@ -30,11 +30,9 @@
 
   <ItemGroup>
     <Folder Include="Behaviors\" />
-    <Folder Include="DTOs\" />
     <Folder Include="EventHandlers\" />
     <Folder Include="GrpcContracts\" />
     <Folder Include="Interfaces\" />
-    <Folder Include="Mappings\" />
     <Folder Include="Validations\" />
   </ItemGroup>
 

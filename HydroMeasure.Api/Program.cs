@@ -1,4 +1,5 @@
 using HydroMeasure.Application.Commands.Condominios.Create;
+using HydroMeasure.Application.Mappings;
 using HydroMeasure.Domain.Repositories;
 using HydroMeasure.Domain.Repositories.Base;
 using HydroMeasure.Infrastructure.Context;
@@ -22,7 +23,7 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddScoped<ICondominioRepository, CondominioRepository>();
 // Registre outros repositórios conforme necessário...
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
+builder.Services.AddAutoMapper(typeof(CondominioProfile));
 // Adiciona os controllers
 builder.Services.AddControllers();
 

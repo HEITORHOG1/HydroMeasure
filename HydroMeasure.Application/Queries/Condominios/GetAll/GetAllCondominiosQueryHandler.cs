@@ -1,21 +1,25 @@
-﻿using HydroMeasure.Domain.Entities;
+﻿using AutoMapper;
+using HydroMeasure.Application.DTOs;
 using HydroMeasure.Domain.Repositories;
 using MediatR;
 
 namespace HydroMeasure.Application.Queries.Condominios.GetAll
 {
-    public class GetAllCondominiosQueryHandler : IRequestHandler<GetAllCondominiosQuery, IEnumerable<Condominio>>
+    public class GetAllCondominiosQueryHandler : IRequestHandler<GetAllCondominiosQuery, IEnumerable<CondominioDto>>
     {
         private readonly ICondominioRepository _condominioRepository;
+        private readonly IMapper _mapper;
 
-        public GetAllCondominiosQueryHandler(ICondominioRepository condominioRepository)
+        public GetAllCondominiosQueryHandler(ICondominioRepository condominioRepository, IMapper mapper)
         {
             _condominioRepository = condominioRepository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Condominio>> Handle(GetAllCondominiosQuery request, CancellationToken cancellationToken)
+        public async Task<IEnumerable<CondominioDto>> Handle(GetAllCondominiosQuery request, CancellationToken cancellationToken)
         {
-            return await _condominioRepository.GetAllAsync();
+            var condominios = await _condominioRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<CondominioDto>>(condominios);
         }
     }
 }

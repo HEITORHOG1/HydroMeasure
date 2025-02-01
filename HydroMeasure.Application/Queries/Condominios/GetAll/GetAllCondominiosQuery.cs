@@ -1,9 +1,9 @@
-﻿using HydroMeasure.Domain.Entities;
+﻿using HydroMeasure.Application.DTOs;
 using MediatR;
 
 namespace HydroMeasure.Application.Queries.Condominios.GetAll
 {
-    public class GetAllCondominiosQuery : IRequest<IEnumerable<Condominio>>
+    public class GetAllCondominiosQuery : IRequest<IEnumerable<CondominioDto>>
     {
     }
 }
