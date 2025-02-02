@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>74401c98-6d14-45b7-8cb2-f00e34d6e200</UserSecretsId>
+	  <RootNamespace>HydroMeasure.Api</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +17,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
   </ItemGroup>
-
+	<ItemGroup>
+		<Protobuf Include="Protos\condominio.proto" GrpcServices="Server" />
+	</ItemGroup>
   <ItemGroup>
     <Folder Include="Filters\" />
     <Folder Include="Middlewares\" />

@@ -25,8 +25,8 @@ namespace HydroMeasure.Api.Controllers
         {
             var result = await _mediator.Send(command);
             if (result.Success)
-                return CreatedAtAction(nameof(GetById), new { id = result.Data?.Id }, result.Data);
-            return result.ToActionResult();
+                return result.ToActionResult(this, nameof(GetById), new { id = result.Data?.Id }, result.Data); // Usando a sobrecarga com CreatedAtAction
+            return result.ToActionResult(); // Para erros, usa a sobrecarga padrão
         }
 
         [HttpPut("{id}")]
@@ -36,7 +36,15 @@ namespace HydroMeasure.Api.Controllers
                 return BadRequest("ID inconsistente.");
 
             var result = await _mediator.Send(command);
-            return result.ToActionResult();
+            return result.ToActionResult(); // Usa a sobrecarga padrão (pode retornar 200 OK ou status de erro)
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var command = new DeleteCondominioCommand(id);
+            var result = await _mediator.Send(command);
+            return result.ToActionResult(); // Usa a sobrecarga para OperationResult<bool> (retorna 204 No Content em caso de sucesso)
         }
 
         [HttpGet("{id}")]
@@ -55,14 +63,6 @@ namespace HydroMeasure.Api.Controllers
             var query = new GetAllCondominiosQuery();
             var condominios = await _mediator.Send(query);
             return Ok(condominios);
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            var command = new DeleteCondominioCommand(id);
-            var result = await _mediator.Send(command);
-            return result.ToActionResult();
         }
     }
 }
