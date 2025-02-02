@@ -92,7 +92,6 @@ app.MapControllers(); // Map REST Controllers
 app.MapGrpcService<CondominioService>();
 app.MapGrpcService<UnidadeService>();
 
-
 // Informational gRPC Endpoint for Browsers (optional - for testing in browser)
 app.MapGet("/", async context =>
 {

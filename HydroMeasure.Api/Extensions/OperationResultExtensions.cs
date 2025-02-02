@@ -39,6 +39,7 @@ namespace HydroMeasure.Api.Extensions
                             Detail = result.Message,
                             Extensions = { { "errors", result.Errors } }
                         });
+
                     case "InvalidInput":
                     case "ValidationFailed": // Adicione "ValidationFailed" caso use validações
                         return new BadRequestObjectResult(new ProblemDetails
@@ -48,6 +49,7 @@ namespace HydroMeasure.Api.Extensions
                             Detail = result.Message,
                             Extensions = { { "errors", result.Errors } }
                         });
+
                     case "Unauthorized":
                         return new UnauthorizedResult(); // 401 Unauthorized
                     case "Forbidden":
@@ -91,6 +93,7 @@ namespace HydroMeasure.Api.Extensions
                             Detail = result.Message,
                             Extensions = { { "errors", result.Errors } }
                         });
+
                     case "InvalidInput":
                     case "ValidationFailed":
                         return new BadRequestObjectResult(new ProblemDetails
@@ -100,10 +103,13 @@ namespace HydroMeasure.Api.Extensions
                             Detail = result.Message,
                             Extensions = { { "errors", result.Errors } }
                         });
+
                     case "Unauthorized":
                         return new UnauthorizedResult();
+
                     case "Forbidden":
                         return new ForbidResult();
+
                     default:
                         return new BadRequestObjectResult(new ProblemDetails
                         {
