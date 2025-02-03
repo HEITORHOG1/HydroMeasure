@@ -27,7 +27,6 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateUnidadeCommand).Assembly });
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateHidrometroCommand).Assembly });
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateLeituraCommand).Assembly });
-
 });
 
 // ----------------------------------------------------------------------------

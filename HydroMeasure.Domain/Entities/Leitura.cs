@@ -13,6 +13,7 @@ namespace HydroMeasure.Domain.Entities
 
         // Navigation Properties
         public Hidrometro Hidrometro { get; private set; }
+
         public Unidade Unidade { get; private set; }
         public Leitura? LeituraAnterior { get; private set; } // Nullable
 
