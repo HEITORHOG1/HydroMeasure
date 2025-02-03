@@ -1,5 +1,6 @@
 using HydroMeasure.Application.Commands.Condominios.Create;
 using HydroMeasure.Application.Commands.Hidrometros.Create;
+using HydroMeasure.Application.Commands.Leituras.Create;
 using HydroMeasure.Application.Commands.Unidades.Create;
 using HydroMeasure.Application.Mappings;
 using HydroMeasure.Domain.Repositories;
@@ -25,6 +26,8 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateCondominioCommand).Assembly });
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateUnidadeCommand).Assembly });
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateHidrometroCommand).Assembly });
+    cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateLeituraCommand).Assembly });
+
 });
 
 // ----------------------------------------------------------------------------
@@ -33,6 +36,7 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddScoped<ICondominioRepository, CondominioRepository>();
 builder.Services.AddScoped<IUnidadeRepository, UnidadeRepository>();
 builder.Services.AddScoped<IHidrometroRepository, HidrometroRepository>();
+builder.Services.AddScoped<ILeituraRepository, LeituraRepository>();
 // Register other repositories here...
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -42,6 +46,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(CondominioProfile));
 builder.Services.AddAutoMapper(typeof(UnidadeProfile));
 builder.Services.AddAutoMapper(typeof(HidrometroProfile));
+builder.Services.AddAutoMapper(typeof(LeituraProfile));
 
 // ----------------------------------------------------------------------------
 // Controllers (REST API) Configuration

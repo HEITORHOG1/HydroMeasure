@@ -4,38 +4,38 @@ namespace HydroMeasure.Domain.Entities
 {
     public class Leitura : EntityBase
     {
-        public Guid HidrometroId { get; private set; } // FK para Hidrometro
+        public Guid HidrometroId { get; private set; }
+        public Guid UnidadeId { get; private set; }
         public decimal LeituraAtual { get; private set; }
         public DateTime DataLeitura { get; private set; }
         public decimal Consumo { get; private set; }
-        public Guid? LeituraAnteriorId { get; private set; } // FK auto-referenciada para Leitura (Leitura Anterior)
+        public Guid? LeituraAnteriorId { get; private set; } // Nullable
 
-        // Navigation property para Hidrometro (1-N)
+        // Navigation Properties
         public Hidrometro Hidrometro { get; private set; }
-
-        // Navigation property auto-referenciada para LeituraAnterior (0..1 - 1)
-        public Leitura? LeituraAnterior { get; private set; } // Permite ser nulo (Leitura inicial não tem anterior)
-
-        // Nova propriedade de navegação para Unidade (N-1) - Leitura pertence a uma Unidade
-        public Guid UnidadeId { get; set; } // Chave estrangeira para Unidade
-
-        public Unidade Unidade { get; set; } // Propriedade de navegação
+        public Unidade Unidade { get; private set; }
+        public Leitura? LeituraAnterior { get; private set; } // Nullable
 
         public Leitura()
-        { }
+        {
+            // Construtor vazio para EF Core
+        }
 
-        public Leitura(Guid hidrometroId, decimal leituraAtual, DateTime dataLeitura, decimal consumo)
+        // **Adicione este construtor:**
+        public Leitura(Guid hidrometroId, Guid unidadeId, decimal leituraAtual, DateTime dataLeitura, decimal consumo, Guid? leituraAnteriorId)
         {
             HidrometroId = hidrometroId;
+            UnidadeId = unidadeId;
             LeituraAtual = leituraAtual;
             DataLeitura = dataLeitura;
             Consumo = consumo;
+            LeituraAnteriorId = leituraAnteriorId;
+            // Validações de domínio podem ser adicionadas aqui se necessário
         }
 
-        //Update
-        public void Update(Guid hidrometroId, decimal leituraAtual, DateTime dataLeitura, decimal consumo, Guid? leituraAnteriorId)
+        // **Adicione este método para atualizar a leitura:**
+        public void Update(decimal leituraAtual, DateTime dataLeitura, decimal consumo, Guid? leituraAnteriorId)
         {
-            HidrometroId = hidrometroId;
             LeituraAtual = leituraAtual;
             DataLeitura = dataLeitura;
             Consumo = consumo;
