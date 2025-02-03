@@ -1,5 +1,5 @@
-using HydroMeasure.Api.Services.GrpcServices;
 using HydroMeasure.Application.Commands.Condominios.Create;
+using HydroMeasure.Application.Commands.Hidrometros.Create;
 using HydroMeasure.Application.Commands.Unidades.Create;
 using HydroMeasure.Application.Mappings;
 using HydroMeasure.Domain.Repositories;
@@ -24,6 +24,7 @@ builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateCondominioCommand).Assembly });
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateUnidadeCommand).Assembly });
+    cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateHidrometroCommand).Assembly });
 });
 
 // ----------------------------------------------------------------------------
@@ -31,6 +32,7 @@ builder.Services.AddMediatR(cfg =>
 // ----------------------------------------------------------------------------
 builder.Services.AddScoped<ICondominioRepository, CondominioRepository>();
 builder.Services.AddScoped<IUnidadeRepository, UnidadeRepository>();
+builder.Services.AddScoped<IHidrometroRepository, HidrometroRepository>();
 // Register other repositories here...
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -39,6 +41,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // ----------------------------------------------------------------------------
 builder.Services.AddAutoMapper(typeof(CondominioProfile));
 builder.Services.AddAutoMapper(typeof(UnidadeProfile));
+builder.Services.AddAutoMapper(typeof(HidrometroProfile));
 
 // ----------------------------------------------------------------------------
 // Controllers (REST API) Configuration
@@ -89,8 +92,6 @@ app.UseAuthorization();
 app.MapControllers(); // Map REST Controllers
 
 // Map gRPC Services
-app.MapGrpcService<CondominioService>();
-app.MapGrpcService<UnidadeService>();
 
 // Informational gRPC Endpoint for Browsers (optional - for testing in browser)
 app.MapGet("/", async context =>
