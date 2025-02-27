@@ -4,6 +4,7 @@ using HydroMeasure.Application.Commands.Hidrometros.Create;
 using HydroMeasure.Application.Commands.Leituras.Create;
 using HydroMeasure.Application.Commands.Unidades.Create;
 using HydroMeasure.Application.Mappings;
+using HydroMeasure.Application.Services;
 using HydroMeasure.Domain.Repositories;
 using HydroMeasure.Domain.Repositories.Base;
 using HydroMeasure.Infrastructure.Context;
@@ -69,6 +70,11 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "HydroMeasure API", Version = "v1" });
     // You can add more Swagger configurations here, like security definitions, etc.
 });
+
+// ----------------------------------------------------------------------------
+// Background Services Configuration
+// ----------------------------------------------------------------------------
+builder.Services.AddHostedService<AlertaGenerationService>();
 
 // ----------------------------------------------------------------------------
 // gRPC Configuration
