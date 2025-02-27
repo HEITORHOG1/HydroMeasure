@@ -39,6 +39,8 @@ builder.Services.AddScoped<IUnidadeRepository, UnidadeRepository>();
 builder.Services.AddScoped<IHidrometroRepository, HidrometroRepository>();
 builder.Services.AddScoped<ILeituraRepository, LeituraRepository>();
 builder.Services.AddScoped<IConfiguracaoCondominioRepository, ConfiguracaoCondominioRepository>();
+builder.Services.AddScoped<IRelatorioRepository, RelatorioRepository>();
+builder.Services.AddScoped<IAlertaRepository, AlertaRepository>();
 // Register other repositories here...
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -50,6 +52,8 @@ builder.Services.AddAutoMapper(typeof(UnidadeProfile));
 builder.Services.AddAutoMapper(typeof(HidrometroProfile));
 builder.Services.AddAutoMapper(typeof(LeituraProfile));
 builder.Services.AddAutoMapper(typeof(ConfiguracaoCondominioProfile));
+builder.Services.AddAutoMapper(typeof(RelatorioProfile));
+builder.Services.AddAutoMapper(typeof(AlertaProfile));
 
 // ----------------------------------------------------------------------------
 // Controllers (REST API) Configuration
