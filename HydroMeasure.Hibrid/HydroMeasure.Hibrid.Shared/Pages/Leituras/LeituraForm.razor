@@ -1,0 +1,454 @@
+﻿@page "/leituras/novo"
+@page "/leituras/editar/{Id:guid}"
+@using HydroMeasure.Hibrid.Shared.Model.Alerta
+@using HydroMeasure.Hibrid.Shared.Model.Hidrometro
+@using HydroMeasure.Hibrid.Shared.Model.Leitura
+@using HydroMeasure.Hibrid.Shared.Model.Unidade
+@using HydroMeasure.Hibrid.Shared.Services
+@inject NavigationManager NavigationManager
+@inject ILeituraService LeituraService
+@inject IHidrometroService HidrometroService
+@inject IUnidadeService UnidadeService
+@inject ISnackbar Snackbar
+
+<PageTitle>@pageTitle - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@breadcrumbs"></MudBreadcrumbs>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@pageTitle</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else
+    {
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudCard Elevation="3">
+                <MudCardContent>
+                    <MudGrid>
+                        @if (Id == null)
+                        {
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="Guid"
+                                           Label="Unidade"
+                                           Required="true"
+                                           RequiredError="Unidade é obrigatória"
+                                           Value="model.UnidadeId"
+                                           ValueChanged="@((Guid value) => OnUnidadeChanged(value))">
+                                    @foreach (var unidade in unidades)
+                                    {
+                                        <MudSelectItem Value="@unidade.Id">@unidade.Identificacao</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="Guid"
+                                           Label="Hidrômetro"
+                                           Required="true"
+                                           RequiredError="Hidrômetro é obrigatório"
+                                           Value="model.HidrometroId"
+                                           ValueChanged="@((Guid value) => OnHidrometroChanged(value))"
+                                           Disabled="@(!unidadeSelected)">
+                                    @foreach (var hidrometro in hidrometros)
+                                    {
+                                        <MudSelectItem Value="@hidrometro.Id">@hidrometro.NumeroSerie @(!string.IsNullOrEmpty(hidrometro.Modelo) ? $"({hidrometro.Modelo})" : "")</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                        }
+                        else
+                        {
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string"
+                                              Value="@selectedUnidadeNome"
+                                              Label="Unidade"
+                                              ReadOnly="true"
+                                              Variant="Variant.Outlined" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string"
+                                              Value="@selectedHidrometroNome"
+                                              Label="Hidrômetro"
+                                              ReadOnly="true"
+                                              Variant="Variant.Outlined" />
+                            </MudItem>
+                        }
+
+                        <MudItem xs="12" md="6">
+                            <MudNumericField T="decimal"
+                                             @bind-Value="model.LeituraAtual"
+                                             Label="Leitura Atual (m³)"
+                                             Required="true"
+                                             RequiredError="Leitura é obrigatória"
+                                             Format="N3"
+                                             Min="0"
+                                             Step="0.001M"
+                                             HideSpinButtons="false" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="model.DataLeitura"
+                                           Label="Data da Leitura"
+                                           Required="true"
+                                           RequiredError="Data é obrigatória"
+                                           DateFormat="dd/MM/yyyy"
+                                           MaxDate="@DateTime.Now" />
+                        </MudItem>
+
+                        @if (Id != null)
+                        {
+                            <MudItem xs="12" md="6">
+                                <MudNumericField T="decimal"
+                                                 @bind-Value="model.Consumo"
+                                                 Label="Consumo (m³)"
+                                                 Format="N3"
+                                                 ReadOnly="true"
+                                                 Variant="Variant.Outlined" />
+                            </MudItem>
+                        }
+
+                        @if (ultimaLeitura != null)
+                        {
+                            <MudItem xs="12">
+                                <MudAlert Severity="Severity.Info" Class="mb-2">
+                                    <div>
+                                        <MudText Typo="Typo.body1"><strong>Última Leitura:</strong> @ultimaLeitura.LeituraAtual.ToString("N3") m³ (@ultimaLeitura.DataLeitura.ToString("dd/MM/yyyy"))</MudText>
+                                        @if (model.LeituraAtual > 0 && model.LeituraAtual < ultimaLeitura.LeituraAtual)
+                                        {
+                                            <MudText Typo="Typo.body2" Color="Color.Error">
+                                                Atenção: A leitura atual é menor que a última leitura registrada.
+                                            </MudText>
+                                        }
+                                        else if (model.LeituraAtual > 0)
+                                        {
+                                            <MudText Typo="Typo.body2">
+                                                Consumo estimado: @((model.LeituraAtual - ultimaLeitura.LeituraAtual).ToString("N3")) m³
+                                            </MudText>
+                                        }
+                                    </div>
+                                </MudAlert>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudCardContent>
+
+                <MudCardActions>
+                    <MudButton OnClick="@(() => NavigationManager.NavigateTo("/leituras"))"
+                               Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               Class="mr-2">
+                        Cancelar
+                    </MudButton>
+
+                    <MudButton OnClick="@Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="@(!success || isSaving)">
+                        @if (isSaving)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Salvando</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Salvar</MudText>
+                        }
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudForm>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public Guid? HidrometroId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public Guid? UnidadeId { get; set; }
+
+    private string pageTitle => Id == null ? "Nova Leitura" : "Editar Leitura";
+    private List<BreadcrumbItem> breadcrumbs = new List<BreadcrumbItem>();
+
+    private MudForm form;
+    private bool success;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool unidadeSelected = false;
+
+    // Modelo para o formulário
+    private LeituraFormModel model = new LeituraFormModel();
+
+    // Dados relacionados
+    private List<UnidadeDto> unidades = new List<UnidadeDto>();
+    private List<HidrometroDto> hidrometros = new List<HidrometroDto>();
+    private List<HidrometroDto> filteredHidrometros = new List<HidrometroDto>();
+    private LeituraDto? ultimaLeitura;
+
+    // Informações para exibição
+    private string selectedUnidadeNome = string.Empty;
+    private string selectedHidrometroNome = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            // Buscar listas de unidades e hidrômetros
+            await Task.WhenAll(
+                LoadUnidades(),
+                LoadHidrometros()
+            );
+
+            UpdateBreadcrumbs();
+
+            if (Id != null)
+            {
+                await LoadLeitura((Guid)Id);
+            }
+            else
+            {
+                if (UnidadeId != null)
+                {
+                    model.UnidadeId = (Guid)UnidadeId;
+                    await OnUnidadeChanged(model.UnidadeId);
+
+                    if (HidrometroId != null)
+                    {
+                        model.HidrometroId = (Guid)HidrometroId;
+                        await OnHidrometroChanged(model.HidrometroId);
+                    }
+                }
+                else if (HidrometroId != null)
+                {
+                    var hidrometro = await HidrometroService.GetHidrometroByIdAsync((Guid)HidrometroId);
+                    if (hidrometro != null)
+                    {
+                        model.HidrometroId = hidrometro.Id;
+                        model.UnidadeId = hidrometro.UnidadeId;
+                        await OnUnidadeChanged(model.UnidadeId);
+                        await OnHidrometroChanged(model.HidrometroId);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar dados: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void UpdateBreadcrumbs()
+    {
+        breadcrumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Dashboard", href: "/"),
+            new BreadcrumbItem("Leituras", href: "/leituras")
+        };
+
+        if (Id == null)
+        {
+            breadcrumbs.Add(new BreadcrumbItem("Nova", href: "/leituras/novo", disabled: true));
+        }
+        else
+        {
+            breadcrumbs.Add(new BreadcrumbItem("Editar", href: $"/leituras/editar/{Id}", disabled: true));
+        }
+    }
+
+    private async Task LoadUnidades()
+    {
+        try
+        {
+            unidades = await UnidadeService.GetAllUnidadesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar unidades: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task LoadHidrometros()
+    {
+        try
+        {
+            hidrometros = await HidrometroService.GetAllHidrometrosAsync();
+            filteredHidrometros = hidrometros.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar hidrômetros: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task OnUnidadeChanged(Guid unidadeId)
+    {
+        model.UnidadeId = unidadeId;
+        var unidade = unidades.FirstOrDefault(u => u.Id == unidadeId);
+        if (unidade != null)
+        {
+            selectedUnidadeNome = unidade.Identificacao;
+
+            // Filtrar hidrômetros por unidade
+            filteredHidrometros = hidrometros.Where(h => h.UnidadeId == unidadeId).ToList();
+            unidadeSelected = true;
+
+            // Se houver apenas um hidrômetro, selecione-o automaticamente
+            if (filteredHidrometros.Count == 1)
+            {
+                model.HidrometroId = filteredHidrometros[0].Id;
+                await OnHidrometroChanged(model.HidrometroId);
+            }
+        }
+        else
+        {
+            unidadeSelected = false;
+        }
+    }
+
+    private async Task OnHidrometroChanged(Guid hidrometroId)
+    {
+        model.HidrometroId = hidrometroId;
+        var hidrometro = hidrometros.FirstOrDefault(h => h.Id == hidrometroId);
+        if (hidrometro != null)
+        {
+            selectedHidrometroNome = $"{hidrometro.NumeroSerie} {(!string.IsNullOrEmpty(hidrometro.Modelo) ? $"({hidrometro.Modelo})" : "")}";
+
+            // Buscar última leitura
+            ultimaLeitura = await LeituraService.GetUltimaLeituraByHidrometroAsync(hidrometroId);
+        }
+    }
+
+    private async Task LoadLeitura(Guid id)
+    {
+        try
+        {
+            var leitura = await LeituraService.GetLeituraByIdAsync(id);
+
+            if (leitura != null)
+            {
+                model = new LeituraFormModel
+                {
+                    Id = leitura.Id,
+                    HidrometroId = leitura.HidrometroId,
+                    UnidadeId = leitura.UnidadeId,
+                    LeituraAtual = leitura.LeituraAtual,
+                    DataLeitura = leitura.DataLeitura,
+                    Consumo = leitura.Consumo,
+                    LeituraAnteriorId = leitura.LeituraAnteriorId
+                };
+
+                // Carregar informações relacionadas
+                await OnUnidadeChanged(model.UnidadeId);
+                await OnHidrometroChanged(model.HidrometroId);
+            }
+            else
+            {
+                Snackbar.Add("Leitura não encontrada", Severity.Error);
+                NavigationManager.NavigateTo("/leituras");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar leitura: {ex.Message}", Severity.Error);
+            NavigationManager.NavigateTo("/leituras");
+        }
+    }
+
+    private async Task Submit()
+    {
+        isSaving = true;
+
+        try
+        {
+            if (Id == null)
+            {
+                // Create new leitura
+                var createCommand = new CreateLeituraCommand
+                {
+                    HidrometroId = model.HidrometroId,
+                    UnidadeId = model.UnidadeId,
+                    LeituraAtual = model.LeituraAtual,
+                    DataLeitura = model.DataLeitura,
+                    LeituraAnteriorId = ultimaLeitura?.Id
+                };
+
+                var result = await LeituraService.CreateLeituraAsync(createCommand);
+
+                if (result.Success)
+                {
+                    Snackbar.Add("Leitura registrada com sucesso!", Severity.Success);
+                    StateHasChanged();
+                    await Task.Delay(500);
+                    NavigationManager.NavigateTo("/leituras", forceLoad: true);
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+            else
+            {
+                // Update existing leitura
+                var updateCommand = new UpdateLeituraCommand
+                {
+                    Id = model.Id ?? Guid.Empty,
+                    HidrometroId = model.HidrometroId,
+                    UnidadeId = model.UnidadeId,
+                    LeituraAtual = model.LeituraAtual,
+                    DataLeitura = model.DataLeitura,
+                    Consumo = model.Consumo,
+                    LeituraAnteriorId = model.LeituraAnteriorId
+                };
+
+                var result = await LeituraService.UpdateLeituraAsync(updateCommand.Id, updateCommand);
+
+                if (result.Success)
+                {
+                    Snackbar.Add("Leitura atualizada com sucesso!", Severity.Success);
+                    StateHasChanged();
+                    await Task.Delay(500);
+                    NavigationManager.NavigateTo("/leituras", forceLoad: true);
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao salvar leitura: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // Modelo para o formulário
+    private class LeituraFormModel
+    {
+        public Guid? Id { get; set; }
+        public Guid HidrometroId { get; set; }
+        public Guid UnidadeId { get; set; }
+        public decimal LeituraAtual { get; set; }
+        public DateTime DataLeitura { get; set; } = DateTime.Today;
+        public decimal Consumo { get; set; }
+        public Guid? LeituraAnteriorId { get; set; }
+    }
+}

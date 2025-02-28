@@ -28,8 +28,14 @@ namespace HydroMeasure.Hibrid
             builder.Services.AddScoped<ICondominioService, CondominioService>();
             // Registrar serviços adicionais
             builder.Services.AddScoped<IUnidadeService, UnidadeService>();
+            // Registrar serviço de Alerta
             builder.Services.AddScoped<IAlertaService, AlertaService>();
+            // Registrar serviço de Configuração de Condomínio
             builder.Services.AddScoped<IConfiguracaoCondominioService, ConfiguracaoCondominioService>();
+            // Registrar serviço de Hidrômetro
+            builder.Services.AddScoped<IHidrometroService, HidrometroService>();
+            // Registrar serviço de Leitura
+            builder.Services.AddScoped<ILeituraService, LeituraService>();
             // Register HTTP client
             builder.Services.AddScoped(sp => new HttpClient
             {

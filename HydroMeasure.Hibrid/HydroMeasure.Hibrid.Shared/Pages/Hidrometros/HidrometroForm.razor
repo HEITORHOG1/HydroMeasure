@@ -1,0 +1,307 @@
+﻿@page "/hidrometros/novo"
+@page "/hidrometros/editar/{Id:guid}"
+@using HydroMeasure.Hibrid.Shared.Model.Hidrometro
+@using HydroMeasure.Hibrid.Shared.Model.Unidade
+@using HydroMeasure.Hibrid.Shared.Services
+@inject NavigationManager NavigationManager
+@inject IHidrometroService HidrometroService
+@inject IUnidadeService UnidadeService
+@inject ISnackbar Snackbar
+
+<PageTitle>@pageTitle - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@breadcrumbs"></MudBreadcrumbs>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@pageTitle</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else
+    {
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudCard Elevation="3">
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="Guid"
+                                       Label="Unidade"
+                                       Required="true"
+                                       RequiredError="Unidade é obrigatória"
+                                       Value="model.UnidadeId"
+                                       ValueChanged="@((Guid value) => OnUnidadeChanged(value))"
+                                       Disabled="@(Id != null)">
+                                @foreach (var unidade in unidades)
+                                {
+                                    <MudSelectItem Value="@unidade.Id">@unidade.Identificacao</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string"
+                                          @bind-Value="model.NumeroSerie"
+                                          Label="Número de Série"
+                                          Required="true"
+                                          RequiredError="Número de série é obrigatório"
+                                          MaxLength="50"
+                                          Counter="50" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string"
+                                          @bind-Value="model.Modelo"
+                                          Label="Modelo"
+                                          MaxLength="100" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="model.DataInstalacao"
+                                           Label="Data de Instalação"
+                                           DateFormat="dd/MM/yyyy"
+                                           MaxDate="@DateTime.Now" />
+                        </MudItem>
+
+                        @if (Id != null)
+                        {
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="string"
+                                           Label="Status do Hidrômetro"
+                                           Required="true"
+                                           RequiredError="Status é obrigatório"
+                                           @bind-Value="model.Status">
+                                    <MudSelectItem Value="@("Ativo")">Ativo</MudSelectItem>
+                                    <MudSelectItem Value="@("Inativo")">Inativo</MudSelectItem>
+                                    <MudSelectItem Value="@("Defeituoso")">Defeituoso</MudSelectItem>
+                                    <MudSelectItem Value="@("EmManutenção")">Em Manutenção</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12">
+                                <MudSwitch @bind-Checked="model.Ativo"
+                                           Label="Ativo"
+                                           Color="Color.Primary" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudCardContent>
+
+                <MudCardActions>
+                    <MudButton OnClick="@(() => NavigationManager.NavigateTo("/hidrometros"))"
+                               Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               Class="mr-2">
+                        Cancelar
+                    </MudButton>
+
+                    <MudButton OnClick="@Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="@(!success || isSaving)">
+                        @if (isSaving)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Salvando</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Salvar</MudText>
+                        }
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudForm>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public Guid? UnidadeId { get; set; }
+
+    private string pageTitle => Id == null ? "Novo Hidrômetro" : "Editar Hidrômetro";
+    private List<BreadcrumbItem> breadcrumbs = new List<BreadcrumbItem>();
+
+    private MudForm form;
+    private bool success;
+    private bool isLoading = true;
+    private bool isSaving = false;
+
+    // Modelo para o formulário
+    private HidrometroFormModel model = new HidrometroFormModel();
+
+    // Lista de unidades para o select
+    private List<UnidadeDto> unidades = new List<UnidadeDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            // Buscar lista de unidades
+            unidades = await UnidadeService.GetAllUnidadesAsync();
+
+            UpdateBreadcrumbs();
+
+            if (Id != null)
+            {
+                await LoadHidrometro((Guid)Id);
+            }
+            else if (UnidadeId != null)
+            {
+                model.UnidadeId = (Guid)UnidadeId;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar dados: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void UpdateBreadcrumbs()
+    {
+        breadcrumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Dashboard", href: "/"),
+            new BreadcrumbItem("Hidrômetros", href: "/hidrometros")
+        };
+
+        if (Id == null)
+        {
+            breadcrumbs.Add(new BreadcrumbItem("Novo", href: "/hidrometros/novo", disabled: true));
+        }
+        else
+        {
+            breadcrumbs.Add(new BreadcrumbItem("Editar", href: $"/hidrometros/editar/{Id}", disabled: true));
+        }
+    }
+
+    private void OnUnidadeChanged(Guid unidadeId)
+    {
+        model.UnidadeId = unidadeId;
+    }
+
+    private async Task LoadHidrometro(Guid id)
+    {
+        try
+        {
+            var hidrometro = await HidrometroService.GetHidrometroByIdAsync(id);
+
+            if (hidrometro != null)
+            {
+                model = new HidrometroFormModel
+                {
+                    Id = hidrometro.Id,
+                    UnidadeId = hidrometro.UnidadeId,
+                    NumeroSerie = hidrometro.NumeroSerie,
+                    Modelo = hidrometro.Modelo,
+                    DataInstalacao = hidrometro.DataInstalacao,
+                    Status = hidrometro.Status,
+                    Ativo = hidrometro.Ativo
+                };
+            }
+            else
+            {
+                Snackbar.Add("Hidrômetro não encontrado", Severity.Error);
+                NavigationManager.NavigateTo("/hidrometros");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar hidrômetro: {ex.Message}", Severity.Error);
+            NavigationManager.NavigateTo("/hidrometros");
+        }
+    }
+
+    private async Task Submit()
+    {
+        isSaving = true;
+
+        try
+        {
+            if (Id == null)
+            {
+                // Create new hidrometro
+                var createCommand = new CreateHidrometroCommand
+                {
+                    UnidadeId = model.UnidadeId,
+                    NumeroSerie = model.NumeroSerie,
+                    Modelo = model.Modelo,
+                    DataInstalacao = model.DataInstalacao
+                };
+
+                var result = await HidrometroService.CreateHidrometroAsync(createCommand);
+
+                if (result.Success)
+                {
+                    Snackbar.Add("Hidrômetro criado com sucesso!", Severity.Success);
+                    StateHasChanged();
+                    await Task.Delay(500);
+                    NavigationManager.NavigateTo("/hidrometros", forceLoad: true);
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+            else
+            {
+                // Update existing hidrometro
+                var updateCommand = new UpdateHidrometroCommand
+                {
+                    Id = model.Id ?? Guid.Empty,
+                    UnidadeId = model.UnidadeId,
+                    NumeroSerie = model.NumeroSerie,
+                    Modelo = model.Modelo,
+                    DataInstalacao = model.DataInstalacao,
+                    Status = model.Status,
+                    Ativo = model.Ativo
+                };
+
+                var result = await HidrometroService.UpdateHidrometroAsync(updateCommand.Id, updateCommand);
+
+                if (result.Success)
+                {
+                    Snackbar.Add("Hidrômetro atualizado com sucesso!", Severity.Success);
+                    StateHasChanged();
+                    await Task.Delay(500);
+                    NavigationManager.NavigateTo("/hidrometros", forceLoad: true);
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao salvar hidrômetro: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // Modelo para o formulário
+    private class HidrometroFormModel
+    {
+        public Guid? Id { get; set; }
+        public Guid UnidadeId { get; set; }
+        public string NumeroSerie { get; set; } = string.Empty;
+        public string? Modelo { get; set; }
+        public DateTime? DataInstalacao { get; set; } = DateTime.Today;
+        public string Status { get; set; } = "Ativo";
+        public bool Ativo { get; set; } = true;
+    }
+}

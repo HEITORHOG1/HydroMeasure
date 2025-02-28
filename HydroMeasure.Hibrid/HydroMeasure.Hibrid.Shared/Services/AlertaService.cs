@@ -1,6 +1,4 @@
-﻿using HydroMeasure.Hibrid.Shared.Model.Alerta;
-
-namespace HydroMeasure.Hibrid.Shared.Services
+﻿namespace HydroMeasure.Hibrid.Shared.Services
 {
     public class AlertaService : IAlertaService
     {

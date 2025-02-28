@@ -1,0 +1,364 @@
+﻿@page "/hidrometros/detalhes/{Id:guid}"
+@using HydroMeasure.Hibrid.Shared.Model.Hidrometro
+@using HydroMeasure.Hibrid.Shared.Model.Unidade
+@using HydroMeasure.Hibrid.Shared.Services
+@inject NavigationManager NavigationManager
+@inject IHidrometroService HidrometroService
+@inject IUnidadeService UnidadeService
+@inject ISnackbar Snackbar
+
+<PageTitle>Detalhes do Hidrômetro - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@_breadcrumbs"></MudBreadcrumbs>
+
+@if (isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (hidrometro == null)
+{
+    <MudAlert Severity="Severity.Error">Hidrômetro não encontrado.</MudAlert>
+}
+else
+{
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">Detalhes do Hidrômetro</MudText>
+        <div>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="@(() => NavigationManager.NavigateTo($"/hidrometros/editar/{Id}"))">
+                Editar
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.AddCircle"
+                       Class="ml-2"
+                       OnClick="@(() => NavigationManager.NavigateTo($"/leituras/novo?hidrometroId={Id}"))">
+                Nova Leitura
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Class="ml-2"
+                       OnClick="@(() => NavigationManager.NavigateTo("/hidrometros"))">
+                Voltar
+            </MudButton>
+        </div>
+    </div>
+
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Informações do Hidrômetro</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudChip Color="@(hidrometro.Ativo? Color.Success: Color.Error)"
+                                 Size="Size.Small">
+                            @hidrometro.Status
+                        </MudChip>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList>
+                        <MudListItem>
+                            <MudText Typo="Typo.body1">
+                                <strong>Número de Série:</strong> @hidrometro.NumeroSerie
+                            </MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText Typo="Typo.body1">
+                                <strong>Modelo:</strong> @(string.IsNullOrEmpty(hidrometro.Modelo) ? "Não informado" : hidrometro.Modelo)
+                            </MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText Typo="Typo.body1">
+                                <strong>Data de Instalação:</strong> @(hidrometro.DataInstalacao?.ToString("dd/MM/yyyy") ?? "Não informada")
+                            </MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText Typo="Typo.body1">
+                                <strong>Unidade:</strong> @(unidade?.Identificacao ?? "Não encontrada")
+                            </MudText>
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Resumo de Leituras</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (!leituras.Any())
+                    {
+                        <MudAlert Severity="Severity.Info">
+                            Nenhuma leitura registrada para este hidrômetro.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudList>
+                            <MudListItem>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Última Leitura:</strong> @ultimaLeitura?.LeituraAtual.ToString("N3") m³ (@ultimaLeitura?.DataLeitura.ToString("dd/MM/yyyy"))
+                                </MudText>
+                            </MudListItem>
+                            <MudListItem>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Último Consumo:</strong> @ultimaLeitura?.Consumo.ToString("N3") m³
+                                </MudText>
+                            </MudListItem>
+                            <MudListItem>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Total de Leituras:</strong> @leituras.Count
+                                </MudText>
+                            </MudListItem>
+                            <MudListItem>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Média de Consumo:</strong> @(mediaConsumo.ToString("N3")) m³
+                                </MudText>
+                            </MudListItem>
+                        </MudList>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <MudTabs Elevation="3" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+        <MudTabPanel Text="Histórico de Leituras" Icon="@Icons.Material.Filled.History">
+            <MudCard Elevation="0">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Histórico de Leituras</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (!leituras.Any())
+                    {
+                        <MudAlert Severity="Severity.Info">
+                            Nenhuma leitura registrada para este hidrômetro.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudTable Items="@leituras" Hover="true" Striped="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Data</MudTh>
+                                <MudTh>Leitura (m³)</MudTh>
+                                <MudTh>Consumo (m³)</MudTh>
+                                <MudTh>Ações</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Data">@context.DataLeitura.ToString("dd/MM/yyyy")</MudTd>
+                                <MudTd DataLabel="Leitura">@context.LeituraAtual.ToString("N3")</MudTd>
+                                <MudTd DataLabel="Consumo">@context.Consumo.ToString("N3")</MudTd>
+                                <MudTd>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Size="Size.Small"
+                                                   Color="Color.Primary"
+                                                   OnClick="@(() => NavigationManager.NavigateTo($"/leituras/editar/{context.Id}"))" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Gráfico de Consumo" Icon="@Icons.Material.Filled.BarChart">
+            <MudCard Elevation="0">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Consumo de Água</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (leituras.Count < 2)
+                    {
+                        <MudAlert Severity="Severity.Info">
+                            Dados insuficientes para gerar o gráfico. São necessárias pelo menos duas leituras.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <div style="height: 350px;">
+                            <MudChart ChartType="ChartType.Line" ChartSeries="@chartSeries" XAxisLabels="@chartLabels" Width="100%" Height="350px">
+                                <CustomGraphics>
+                                    <MudText Typo="Typo.subtitle2" Align="Align.Center">Consumo ao longo do tempo (m³)</MudText>
+                                </CustomGraphics>
+                            </MudChart>
+                        </div>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private List<BreadcrumbItem> _breadcrumbs = new List<BreadcrumbItem>();
+    private bool isLoading = true;
+
+    private HidrometroDto? hidrometro;
+    private UnidadeDto? unidade;
+    private List<MockLeituraDto> leituras = new List<MockLeituraDto>();
+    private MockLeituraDto? ultimaLeitura => leituras.OrderByDescending(l => l.DataLeitura).FirstOrDefault();
+    private decimal mediaConsumo => leituras.Any() ? leituras.Average(l => l.Consumo) : 0;
+
+    // Dados para o gráfico
+    private List<ChartSeries> chartSeries = new List<ChartSeries>();
+    private string[] chartLabels = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        UpdateBreadcrumbs();
+        await LoadData();
+    }
+
+    private void UpdateBreadcrumbs()
+    {
+        _breadcrumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Dashboard", href: "/"),
+            new BreadcrumbItem("Hidrômetros", href: "/hidrometros"),
+            new BreadcrumbItem("Detalhes", href: $"/hidrometros/detalhes/{Id}", disabled: true)
+        };
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+
+        try
+        {
+            hidrometro = await HidrometroService.GetHidrometroByIdAsync(Id);
+
+            if (hidrometro != null)
+            {
+                await Task.WhenAll(
+                    LoadUnidade(hidrometro.UnidadeId),
+                    LoadLeituras()
+                );
+
+                // Preparar dados para o gráfico
+                PrepareChartData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar dados do hidrômetro: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadUnidade(Guid unidadeId)
+    {
+        try
+        {
+            unidade = await UnidadeService.GetUnidadeByIdAsync(unidadeId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar unidade: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task LoadLeituras()
+    {
+        try
+        {
+            // Você precisará criar este método no LeituraService
+            //leituras = await LeituraService.GetLeiturasByHidrometroAsync(Id);
+
+            // Mock data for now
+            leituras = new List<MockLeituraDto>
+            {
+                new MockLeituraDto
+                {
+                    Id = Guid.NewGuid(),
+                    HidrometroId = Id,
+                    UnidadeId = hidrometro!.UnidadeId,
+                    LeituraAtual = 123.456m,
+                    DataLeitura = DateTime.Now.AddMonths(-2),
+                    Consumo = 0m
+                },
+                new MockLeituraDto
+                {
+                    Id = Guid.NewGuid(),
+                    HidrometroId = Id,
+                    UnidadeId = hidrometro!.UnidadeId,
+                    LeituraAtual = 125.801m,
+                    DataLeitura = DateTime.Now.AddMonths(-1),
+                    Consumo = 2.345m
+                },
+                new MockLeituraDto
+                {
+                    Id = Guid.NewGuid(),
+                    HidrometroId = Id,
+                    UnidadeId = hidrometro!.UnidadeId,
+                    LeituraAtual = 128.345m,
+                    DataLeitura = DateTime.Now.AddDays(-3),
+                    Consumo = 2.544m
+                }
+            };
+
+            // Ordenar as leituras
+            leituras = leituras.OrderByDescending(l => l.DataLeitura).ToList();
+
+            // Simular um pequeno atraso para dar tempo de carregar
+            await Task.Delay(300);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar leituras: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private void PrepareChartData()
+    {
+        if (leituras.Count < 2)
+            return;
+
+        // Ordenar leituras por data (mais antigas primeiro)
+        var orderedLeituras = leituras.OrderBy(l => l.DataLeitura).ToList();
+
+        // Preparar dados para o gráfico
+        chartLabels = orderedLeituras.Select(l => l.DataLeitura.ToString("dd/MM/yyyy")).ToArray();
+
+        // Criar série para consumo
+        chartSeries = new List<ChartSeries>
+        {
+            new ChartSeries
+            {
+                Name = "Consumo (m³)",
+                Data = orderedLeituras.Select(l => (double)l.Consumo).ToArray()
+            }
+        };
+    }
+
+    private class MockLeituraDto
+    {
+        public Guid Id { get; set; }
+        public Guid HidrometroId { get; set; }
+        public Guid UnidadeId { get; set; }
+        public decimal LeituraAtual { get; set; }
+        public DateTime DataLeitura { get; set; }
+        public decimal Consumo { get; set; }
+    }
+}
+
+

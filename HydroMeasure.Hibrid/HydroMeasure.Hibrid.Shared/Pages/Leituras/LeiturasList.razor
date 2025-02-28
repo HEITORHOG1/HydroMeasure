@@ -1,0 +1,236 @@
+﻿@page "/leituras"
+@using HydroMeasure.Hibrid.Shared.Model.Leitura
+@using HydroMeasure.Hibrid.Shared.Services
+@inject NavigationManager NavigationManager
+@inject ILeituraService LeituraService
+@inject ISnackbar Snackbar
+
+<PageTitle>Lista de Leituras - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@breadcrumbs"></MudBreadcrumbs>
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <MudText Typo="Typo.h4">Leituras</MudText>
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => NavigationManager.NavigateTo("/leituras/novo"))">
+        Nova Leitura
+    </MudButton>
+</div>
+
+<MudPaper Class="pa-4">
+    <MudToolBar DisableGutters="true" Class="mb-4">
+        <MudTextField T="string"
+                      Value="@searchString"
+                      ValueChanged="@((string value) => OnSearchChanged(value))"
+                      Placeholder="Buscar leitura..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Class="mr-4"
+                      Immediate="true"
+                      Clearable="true" />
+
+        <MudDateRangePicker @ref="dateRangePicker"
+                            Label="Filtrar por data"
+                            DateFormat="dd/MM/yyyy"
+                            PickerVariant="PickerVariant.Dialog"
+                            DateRange="@dateRange"
+                            AdornmentColor="Color.Primary"
+                            Rounded="true"
+                            MaxDate="@DateTime.Now"
+                            Class="mr-4"
+                            Clearable="true"
+                            DateRangeChanged="@OnDateRangeChanged" />
+
+        <MudSpacer />
+
+        <MudTooltip Text="Atualizar">
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="LoadLeituras" />
+        </MudTooltip>
+    </MudToolBar>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center my-4">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@filteredLeituras"
+                  Dense="false"
+                  Hover="true"
+                  Bordered="false"
+                  Striped="true"
+                  Loading="@isLoading"
+                  LoadingProgressColor="Color.Primary"
+                  Elevation="0">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LeituraDto, object>(x => x.DataLeitura)">
+                        Data
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LeituraDto, object>(x => x.NumeroSerieHidrometro)">
+                        Hidrômetro
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LeituraDto, object>(x => x.IdentificacaoUnidade)">
+                        Unidade
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LeituraDto, object>(x => x.LeituraAtual)">
+                        Leitura (m³)
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LeituraDto, object>(x => x.Consumo)">
+                        Consumo (m³)
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>Ações</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Data">@context.DataLeitura.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="Hidrômetro">@context.NumeroSerieHidrometro</MudTd>
+                <MudTd DataLabel="Unidade">@context.IdentificacaoUnidade</MudTd>
+                <MudTd DataLabel="Leitura">@context.LeituraAtual.ToString("N3")</MudTd>
+                <MudTd DataLabel="Consumo">@context.Consumo.ToString("N3")</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Size="Size.Small"
+                                   Color="Color.Primary"
+                                   OnClick="@(() => NavigationManager.NavigateTo($"/leituras/editar/{context.Id}"))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Size="Size.Small"
+                                   Color="Color.Error"
+                                   OnClick="@(() => ConfirmDeleteLeitura(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                   Size="Size.Small"
+                                   Color="Color.Info"
+                                   OnClick="@(() => NavigationManager.NavigateTo($"/leituras/detalhes/{context.Id}"))" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+            <NoRecordsContent>
+                <MudText>Nenhuma leitura encontrada.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<BreadcrumbItem> breadcrumbs = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Dashboard", href: "/"),
+        new BreadcrumbItem("Leituras", href: "/leituras", disabled: true)
+    };
+
+    private List<LeituraDto> leituras = new List<LeituraDto>();
+    private List<LeituraDto> filteredLeituras = new List<LeituraDto>();
+    private bool isLoading = true;
+    private string searchString = "";
+    private DateRange dateRange = new DateRange();
+    private MudDateRangePicker dateRangePicker;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLeituras();
+    }
+
+    // Métodos para tratar eventos ValueChanged
+    private void OnSearchChanged(string value)
+    {
+        searchString = value;
+        ApplyFilters();
+    }
+
+    private void OnDateRangeChanged(DateRange range)
+    {
+        dateRange = range;
+        ApplyFilters();
+    }
+
+    private async Task LoadLeituras()
+    {
+        isLoading = true;
+
+        try
+        {
+            leituras = await LeituraService.GetAllLeiturasAsync();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar leituras: {ex.Message}", Severity.Error);
+            leituras = new List<LeituraDto>();
+            filteredLeituras = new List<LeituraDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredLeituras = leituras
+            .Where(l => string.IsNullOrWhiteSpace(searchString) ||
+                    (l.NumeroSerieHidrometro?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (l.IdentificacaoUnidade?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Where(l => (!dateRange.Start.HasValue || l.DataLeitura.Date >= dateRange.Start.Value.Date) &&
+                    (!dateRange.End.HasValue || l.DataLeitura.Date <= dateRange.End.Value.Date))
+            .OrderByDescending(l => l.DataLeitura)
+            .ToList();
+    }
+
+    private async Task ConfirmDeleteLeitura(LeituraDto leitura)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Confirmar exclusão",
+            $"Deseja realmente excluir a leitura do hidrômetro {leitura.NumeroSerieHidrometro} de {leitura.DataLeitura.ToString("dd/MM/yyyy")}?",
+            yesText: "Excluir", noText: "Cancelar");
+
+        if (result == true)
+        {
+            await DeleteLeitura(leitura.Id);
+        }
+    }
+
+    private async Task DeleteLeitura(Guid id)
+    {
+        isLoading = true;
+
+        try
+        {
+            var result = await LeituraService.DeleteLeituraAsync(id);
+
+            if (result.Success)
+            {
+                Snackbar.Add("Leitura excluída com sucesso!", Severity.Success);
+                await LoadLeituras();
+            }
+            else
+            {
+                Snackbar.Add($"Erro ao excluir: {result.Message}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao excluir leitura: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    [Inject] private IDialogService DialogService { get; set; }
+}

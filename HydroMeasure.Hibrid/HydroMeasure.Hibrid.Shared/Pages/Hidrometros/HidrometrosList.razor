@@ -1,0 +1,234 @@
+﻿@page "/hidrometros"
+@using HydroMeasure.Hibrid.Shared.Model.Hidrometro
+@using HydroMeasure.Hibrid.Shared.Services
+@inject NavigationManager NavigationManager
+@inject IHidrometroService HidrometroService
+@inject ISnackbar Snackbar
+
+<PageTitle>Lista de Hidrômetros - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@breadcrumbs"></MudBreadcrumbs>
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <MudText Typo="Typo.h4">Hidrômetros</MudText>
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => NavigationManager.NavigateTo("/hidrometros/novo"))">
+        Novo Hidrômetro
+    </MudButton>
+</div>
+
+<MudPaper Class="pa-4">
+    <MudToolBar DisableGutters="true" Class="mb-4">
+        <MudTextField T="string"
+                      Value="@searchString"
+                      ValueChanged="@((string value) => OnSearchChanged(value))"
+                      Placeholder="Buscar hidrômetro..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Class="mr-4"
+                      Immediate="true"
+                      Clearable="true" />
+
+        <MudSelect T="bool?"
+                   Value="@statusFilter"
+                   ValueChanged="@((bool? value) => OnStatusFilterChanged(value))"
+                   Placeholder="Status"
+                   Clearable="true"
+                   Class="mr-4">
+            <MudSelectItem Value="@((bool?)null)">Todos</MudSelectItem>
+            <MudSelectItem Value="@((bool?)true)">Ativos</MudSelectItem>
+            <MudSelectItem Value="@((bool?)false)">Inativos</MudSelectItem>
+        </MudSelect>
+
+        <MudSpacer />
+
+        <MudTooltip Text="Atualizar">
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="LoadHidrometros" />
+        </MudTooltip>
+    </MudToolBar>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center my-4">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@filteredHidrometros"
+                  Dense="false"
+                  Hover="true"
+                  Bordered="false"
+                  Striped="true"
+                  Loading="@isLoading"
+                  LoadingProgressColor="Color.Primary"
+                  Elevation="0">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<HidrometroDto, object>(x => x.NumeroSerie)">
+                        Nº de Série
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<HidrometroDto, object>(x => x.Modelo)">
+                        Modelo
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<HidrometroDto, object>(x => x.IdentificacaoUnidade)">
+                        Unidade
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<HidrometroDto, object>(x => x.DataInstalacao)">
+                        Instalação
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Ações</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nº de Série">@context.NumeroSerie</MudTd>
+                <MudTd DataLabel="Modelo">@(string.IsNullOrEmpty(context.Modelo) ? "-" : context.Modelo)</MudTd>
+                <MudTd DataLabel="Unidade">@context.IdentificacaoUnidade</MudTd>
+                <MudTd DataLabel="Instalação">@(context.DataInstalacao?.ToString("dd/MM/yyyy") ?? "-")</MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip Color="@(context.Ativo? Color.Success: Color.Error)"
+                             Size="Size.Small">
+                        @context.Status
+                    </MudChip>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Size="Size.Small"
+                                   Color="Color.Primary"
+                                   OnClick="@(() => NavigationManager.NavigateTo($"/hidrometros/editar/{context.Id}"))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Size="Size.Small"
+                                   Color="Color.Error"
+                                   OnClick="@(() => ConfirmDeleteHidrometro(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ShowChart"
+                                   Size="Size.Small"
+                                   Color="Color.Secondary"
+                                   OnClick="@(() => NavigationManager.NavigateTo($"/leituras/hidrometro/{context.Id}"))" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+            <NoRecordsContent>
+                <MudText>Nenhum hidrômetro encontrado.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<BreadcrumbItem> breadcrumbs = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Dashboard", href: "/"),
+        new BreadcrumbItem("Hidrômetros", href: "/hidrometros", disabled: true)
+    };
+
+    private List<HidrometroDto> hidrometros = new List<HidrometroDto>();
+    private List<HidrometroDto> filteredHidrometros = new List<HidrometroDto>();
+    private bool isLoading = true;
+    private string searchString = "";
+    private bool? statusFilter = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHidrometros();
+    }
+
+    // Métodos para tratar eventos ValueChanged
+    private void OnSearchChanged(string value)
+    {
+        searchString = value;
+        ApplyFilters();
+    }
+
+    private void OnStatusFilterChanged(bool? value)
+    {
+        statusFilter = value;
+        ApplyFilters();
+    }
+
+    private async Task LoadHidrometros()
+    {
+        isLoading = true;
+
+        try
+        {
+            hidrometros = await HidrometroService.GetAllHidrometrosAsync();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar hidrômetros: {ex.Message}", Severity.Error);
+            hidrometros = new List<HidrometroDto>();
+            filteredHidrometros = new List<HidrometroDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredHidrometros = hidrometros
+            .Where(h => string.IsNullOrWhiteSpace(searchString) ||
+                    (h.NumeroSerie?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (h.Modelo?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (h.IdentificacaoUnidade?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Where(h => statusFilter == null || h.Ativo == statusFilter)
+            .ToList();
+    }
+
+    private async Task ConfirmDeleteHidrometro(HidrometroDto hidrometro)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Confirmar exclusão",
+            $"Deseja realmente excluir o hidrômetro {hidrometro.NumeroSerie}?",
+            yesText: "Excluir", noText: "Cancelar");
+
+        if (result == true)
+        {
+            await DeleteHidrometro(hidrometro.Id);
+        }
+    }
+
+    private async Task DeleteHidrometro(Guid id)
+    {
+        isLoading = true;
+
+        try
+        {
+            var result = await HidrometroService.DeleteHidrometroAsync(id);
+
+            if (result.Success)
+            {
+                Snackbar.Add("Hidrômetro excluído com sucesso!", Severity.Success);
+                await LoadHidrometros();
+            }
+            else
+            {
+                Snackbar.Add($"Erro ao excluir: {result.Message}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao excluir hidrômetro: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    [Inject] private IDialogService DialogService { get; set; }
+}
