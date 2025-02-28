@@ -1,0 +1,325 @@
+﻿@page "/unidades/novo"
+@page "/unidades/editar/{Id:guid}"
+@using HydroMeasure.Hibrid.Shared.Model.Condominio
+@using HydroMeasure.Hibrid.Shared.Model.Unidade
+@using HydroMeasure.Hibrid.Shared.Services
+@inject NavigationManager NavigationManager
+@inject IUnidadeService UnidadeService
+@inject ICondominioService CondominioService
+@inject ISnackbar Snackbar
+
+<PageTitle>@pageTitle - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@breadcrumbs"></MudBreadcrumbs>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@pageTitle</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else
+    {
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudCard Elevation="3">
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="Guid"
+                                       Label="Condomínio"
+                                       Required="true"
+                                       RequiredError="Condomínio é obrigatório"
+                                       Value="model.CondominioId"
+                                       ValueChanged="@((Guid value) => OnCondominioChanged(value))"
+                                       Disabled="@(Id != null)">
+                                @foreach (var condominio in condominios)
+                                {
+                                    <MudSelectItem Value="@condominio.Id">@condominio.Nome</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string"
+                                          @bind-Value="model.Identificacao"
+                                          Label="Identificação da Unidade"
+                                          Required="true"
+                                          RequiredError="Identificação é obrigatória"
+                                          MaxLength="50"
+                                          Counter="50" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="string"
+                                       Label="Tipo"
+                                       Required="true"
+                                       RequiredError="Tipo é obrigatório"
+                                       @bind-Value="model.Tipo">
+                                <MudSelectItem Value="@("Residencial")">Residencial</MudSelectItem>
+                                <MudSelectItem Value="@("Comercial")">Comercial</MudSelectItem>
+                                <MudSelectItem Value="@("Outro")">Outro</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string"
+                                          @bind-Value="model.MoradorResponsavel"
+                                          Label="Morador Responsável"
+                                          MaxLength="200" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudNumericField T="decimal"
+                                             @bind-Value="model.MediaConsumo"
+                                             Label="Média de Consumo (m³)"
+                                             Format="N2"
+                                             Min="0"
+                                             Step="0.1M" />
+                        </MudItem>
+
+                        @if (Id != null)
+                        {
+                            <MudItem xs="12">
+                                <MudSelect T="string"
+                                           Label="Status da Unidade"
+                                           Required="true"
+                                           RequiredError="Status é obrigatório"
+                                           @bind-Value="model.Status">
+                                    <MudSelectItem Value="@("Ativo")">Ativo</MudSelectItem>
+                                    <MudSelectItem Value="@("Inativo")">Inativo</MudSelectItem>
+                                    <MudSelectItem Value="@("Bloqueado")">Bloqueado</MudSelectItem>
+                                    <MudSelectItem Value="@("EmManutenção")">Em Manutenção</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12">
+                                <MudSwitch @bind-Checked="model.Ativo"
+                                           Label="Ativo"
+                                           Color="Color.Primary" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudCardContent>
+
+                <MudCardActions>
+                    <MudButton OnClick="@(() => NavigationManager.NavigateTo("/unidades"))"
+                               Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               Class="mr-2">
+                        Cancelar
+                    </MudButton>
+
+                    <MudButton OnClick="@Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="@(!success || isSaving)">
+                        @if (isSaving)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Salvando</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Salvar</MudText>
+                        }
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudForm>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public Guid? CondominioId { get; set; }
+
+    private string pageTitle => Id == null ? "Nova Unidade" : "Editar Unidade";
+    private List<BreadcrumbItem> breadcrumbs = new List<BreadcrumbItem>();
+
+    private MudForm form;
+    private bool success;
+    private bool isLoading = true;
+    private bool isSaving = false;
+
+    // Modelo para o formulário
+    private UnidadeFormModel model = new UnidadeFormModel();
+
+    // Lista de condomínios para o select
+    private List<CondominioDto> condominios = new List<CondominioDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            // Buscar lista de condomínios
+            condominios = await CondominioService.GetAllCondominiosAsync();
+
+            UpdateBreadcrumbs();
+
+            if (Id != null)
+            {
+                await LoadUnidade((Guid)Id);
+            }
+            else if (CondominioId != null)
+            {
+                model.CondominioId = (Guid)CondominioId;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar dados: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void UpdateBreadcrumbs()
+    {
+        breadcrumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Dashboard", href: "/"),
+            new BreadcrumbItem("Unidades", href: "/unidades")
+        };
+
+        if (Id == null)
+        {
+            breadcrumbs.Add(new BreadcrumbItem("Nova", href: "/unidades/novo", disabled: true));
+        }
+        else
+        {
+            breadcrumbs.Add(new BreadcrumbItem("Editar", href: $"/unidades/editar/{Id}", disabled: true));
+        }
+    }
+
+    private void OnCondominioChanged(Guid condominioId)
+    {
+        model.CondominioId = condominioId;
+    }
+
+    private async Task LoadUnidade(Guid id)
+    {
+        try
+        {
+            var unidade = await UnidadeService.GetUnidadeByIdAsync(id);
+
+            if (unidade != null)
+            {
+                model = new UnidadeFormModel
+                {
+                    Id = unidade.Id,
+                    CondominioId = unidade.CondominioId,
+                    Identificacao = unidade.Identificacao,
+                    Tipo = unidade.Tipo,
+                    MoradorResponsavel = unidade.MoradorResponsavel,
+                    MediaConsumo = unidade.MediaConsumo,
+                    Status = unidade.Status,
+                    Ativo = unidade.Ativo
+                };
+            }
+            else
+            {
+                Snackbar.Add("Unidade não encontrada", Severity.Error);
+                NavigationManager.NavigateTo("/unidades");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar unidade: {ex.Message}", Severity.Error);
+            NavigationManager.NavigateTo("/unidades");
+        }
+    }
+
+    private async Task Submit()
+    {
+        isSaving = true;
+
+        try
+        {
+            if (Id == null)
+            {
+                // Create new unidade
+                var createCommand = new CreateUnidadeCommand
+                {
+                    CondominioId = model.CondominioId,
+                    Identificacao = model.Identificacao,
+                    Tipo = model.Tipo,
+                    MoradorResponsavel = model.MoradorResponsavel,
+                    MediaConsumo = model.MediaConsumo
+                };
+
+                var result = await UnidadeService.CreateUnidadeAsync(createCommand);
+
+                if (result.Success)
+                {
+                    Snackbar.Add("Unidade criada com sucesso!", Severity.Success);
+                    StateHasChanged();
+                    await Task.Delay(500);
+                    NavigationManager.NavigateTo("/unidades", forceLoad: true);
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+            else
+            {
+                // Update existing unidade
+                var updateCommand = new UpdateUnidadeCommand
+                {
+                    Id = model.Id ?? Guid.Empty,
+                    CondominioId = model.CondominioId,
+                    Identificacao = model.Identificacao,
+                    Tipo = model.Tipo,
+                    MoradorResponsavel = model.MoradorResponsavel,
+                    MediaConsumo = model.MediaConsumo,
+                    Status = model.Status,
+                    Ativo = model.Ativo
+                };
+
+                var result = await UnidadeService.UpdateUnidadeAsync(updateCommand.Id, updateCommand);
+
+                if (result.Success)
+                {
+                    Snackbar.Add("Unidade atualizada com sucesso!", Severity.Success);
+                    StateHasChanged();
+                    await Task.Delay(500);
+                    NavigationManager.NavigateTo("/unidades", forceLoad: true);
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao salvar unidade: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // Modelo para o formulário
+    private class UnidadeFormModel
+    {
+        public Guid? Id { get; set; }
+        public Guid CondominioId { get; set; }
+        public string Identificacao { get; set; } = string.Empty;
+        public string Tipo { get; set; } = "Residencial";
+        public string? MoradorResponsavel { get; set; }
+        public decimal MediaConsumo { get; set; }
+        public string Status { get; set; } = "Ativo";
+        public bool Ativo { get; set; } = true;
+    }
+}

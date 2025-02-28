@@ -1,0 +1,455 @@
+﻿@page "/unidades/detalhes/{Id:guid}"
+@using HydroMeasure.Hibrid.Shared.Model.Alerta
+@using HydroMeasure.Hibrid.Shared.Model.Condominio
+@using HydroMeasure.Hibrid.Shared.Model.Unidade
+@using HydroMeasure.Hibrid.Shared.Services
+@inject NavigationManager NavigationManager
+@inject IUnidadeService UnidadeService
+@inject ICondominioService CondominioService
+@inject IAlertaService AlertaService
+@inject ISnackbar Snackbar
+
+<PageTitle>Detalhes da Unidade - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@_breadcrumbs"></MudBreadcrumbs>
+
+@if (isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (unidade == null)
+{
+    <MudAlert Severity="Severity.Error">Unidade não encontrada.</MudAlert>
+}
+else
+{
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">Detalhes da Unidade</MudText>
+        <div>
+            <MudButton Variant="Variant.Filled" 
+                      Color="Color.Primary" 
+                      StartIcon="@Icons.Material.Filled.Edit" 
+                      OnClick="@(() => NavigationManager.NavigateTo($"/unidades/editar/{Id}"))">
+                Editar
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" 
+                      Color="Color.Default" 
+                      StartIcon="@Icons.Material.Filled.ArrowBack"
+                      Class="ml-2"
+                      OnClick="@(() => NavigationManager.NavigateTo("/unidades"))">
+                Voltar
+            </MudButton>
+        </div>
+    </div>
+
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Informações Gerais</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudChip Color="@(unidade.Ativo ? Color.Success : Color.Error)" 
+                               Size="Size.Small">
+                            @(unidade.Ativo ? "Ativo" : "Inativo")
+                        </MudChip>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList>
+                        <MudListItem>
+                            <MudText Typo="Typo.body1">
+                                <strong>Identificação:</strong> @unidade.Identificacao
+                            </MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText Typo="Typo.body1">
+                                <strong>Tipo:</strong> @unidade.Tipo
+                            </MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText Typo="Typo.body1">
+                                <strong>Condomínio:</strong> @(condominio?.Nome ?? "Não encontrado")
+                            </MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText Typo="Typo.body1">
+                                <strong>Status:</strong> @unidade.Status
+                            </MudText>
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Informações do Morador</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList>
+                        <MudListItem>
+                            <MudText Typo="Typo.body1">
+                                <strong>Responsável:</strong> @(string.IsNullOrEmpty(unidade.MoradorResponsavel) ? "Não informado" : unidade.MoradorResponsavel)
+                            </MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText Typo="Typo.body1">
+                                <strong>Média de Consumo:</strong> @unidade.MediaConsumo.ToString("N2") m³
+                            </MudText>
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <MudTabs Elevation="3" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+        <MudTabPanel Text="Hidrômetros" Icon="@Icons.Material.Filled.WaterDrop">
+            <MudCard Elevation="0">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Hidrômetros</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   Href="@($"/hidrometros/novo?unidadeId={Id}")">
+                            Novo Hidrômetro
+                        </MudButton>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (hidrometros.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info">
+                            Nenhum hidrômetro cadastrado para esta unidade.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudTable Items="@hidrometros" Hover="true" Striped="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Nº Série</MudTh>
+                                <MudTh>Modelo</MudTh>
+                                <MudTh>Instalação</MudTh>
+                                <MudTh>Status</MudTh>
+                                <MudTh>Ações</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Nº Série">@context.NumeroSerie</MudTd>
+                                <MudTd DataLabel="Modelo">@(string.IsNullOrEmpty(context.Modelo) ? "-" : context.Modelo)</MudTd>
+                                <MudTd DataLabel="Instalação">@(context.DataInstalacao?.ToString("dd/MM/yyyy") ?? "-")</MudTd>
+                                <MudTd DataLabel="Status">
+                                    <MudChip Color="@(context.Ativo? Color.Success: Color.Error)"
+                                             Size="Size.Small">
+                                        @context.Status
+                                    </MudChip>
+                                </MudTd>
+                                <MudTd>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Size="Size.Small"
+                                                   Color="Color.Primary"
+                                                   OnClick="@(() => NavigationManager.NavigateTo($"/hidrometros/editar/{context.Id}"))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.ShowChart"
+                                                   Size="Size.Small"
+                                                   Color="Color.Secondary"
+                                                   OnClick="@(() => NavigationManager.NavigateTo($"/leituras/hidrometro/{context.Id}"))" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Leituras" Icon="@Icons.Material.Filled.BarChart">
+            <MudCard Elevation="0">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Últimas Leituras</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   Href="@($"/leituras/novo?unidadeId={Id}")">
+                            Nova Leitura
+                        </MudButton>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (leituras.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info">
+                            Nenhuma leitura registrada para esta unidade.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudTable Items="@leituras" Hover="true" Striped="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Hidrômetro</MudTh>
+                                <MudTh>Data</MudTh>
+                                <MudTh>Leitura (m³)</MudTh>
+                                <MudTh>Consumo (m³)</MudTh>
+                                <MudTh>Ações</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Hidrômetro">@context.NumeroSerieHidrometro</MudTd>
+                                <MudTd DataLabel="Data">@context.DataLeitura.ToString("dd/MM/yyyy")</MudTd>
+                                <MudTd DataLabel="Leitura">@context.LeituraAtual.ToString("N3")</MudTd>
+                                <MudTd DataLabel="Consumo">@context.Consumo.ToString("N3")</MudTd>
+                                <MudTd>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Size="Size.Small"
+                                                   Color="Color.Primary"
+                                                   OnClick="@(() => NavigationManager.NavigateTo($"/leituras/editar/{context.Id}"))" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Alertas" Icon="@Icons.Material.Filled.Notifications">
+            <MudCard Elevation="0">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Alertas da Unidade</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (alertas.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info">
+                            Nenhum alerta registrado para esta unidade.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudTable Items="@alertas" Hover="true" Striped="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Tipo</MudTh>
+                                <MudTh>Mensagem</MudTh>
+                                <MudTh>Data</MudTh>
+                                <MudTh>Status</MudTh>
+                                <MudTh>Ações</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Tipo">@context.Tipo</MudTd>
+                                <MudTd DataLabel="Mensagem">@context.Mensagem</MudTd>
+                                <MudTd DataLabel="Data">@context.DataAlerta.ToString("dd/MM/yyyy HH:mm")</MudTd>
+                                <MudTd DataLabel="Status">
+                                    <MudChip Color="@(context.Resolvido? Color.Success: Color.Error)"
+                                             Size="Size.Small">
+                                        @(context.Resolvido ? "Resolvido" : "Pendente")
+                                    </MudChip>
+                                </MudTd>
+                                <MudTd>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                                   Size="Size.Small"
+                                                   Color="Color.Info"
+                                                   OnClick="@(() => NavigationManager.NavigateTo($"/alertas/detalhes/{context.Id}"))" />
+                                    @if (!context.Resolvido)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
+                                                       Size="Size.Small"
+                                                       Color="Color.Success"
+                                                       OnClick="@(() => ResolverAlerta(context.Id))" />
+                                    }
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private List<BreadcrumbItem> _breadcrumbs = new List<BreadcrumbItem>();
+    private bool isLoading = true;
+
+    private UnidadeDto? unidade;
+    private CondominioDto? condominio;
+    private List<HidrometroDto> hidrometros = new List<HidrometroDto>();
+    private List<LeituraDto> leituras = new List<LeituraDto>();
+    private List<AlertaDto> alertas = new List<AlertaDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        UpdateBreadcrumbs();
+        await LoadData();
+    }
+
+    private void UpdateBreadcrumbs()
+    {
+        _breadcrumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Dashboard", href: "/"),
+            new BreadcrumbItem("Unidades", href: "/unidades"),
+            new BreadcrumbItem("Detalhes", href: $"/unidades/detalhes/{Id}", disabled: true)
+        };
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+
+        try
+        {
+            unidade = await UnidadeService.GetUnidadeByIdAsync(Id);
+
+            if (unidade != null)
+            {
+                await Task.WhenAll(
+                    LoadCondominio(unidade.CondominioId),
+                    LoadHidrometros(),
+                    LoadLeituras(),
+                    LoadAlertas()
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar dados da unidade: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadCondominio(Guid condominioId)
+    {
+        try
+        {
+            condominio = await CondominioService.GetCondominioByIdAsync(condominioId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar condomínio: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task LoadHidrometros()
+    {
+        try
+        {
+            // Você precisará criar este método no HidrometroService
+            // hidrometros = await HidrometroService.GetHidrometrosByUnidadeAsync(Id);
+
+            // Mock data for now
+            hidrometros = new List<HidrometroDto>
+            {
+                new HidrometroDto
+                {
+                    Id = Guid.NewGuid(),
+                    UnidadeId = Id,
+                    NumeroSerie = "H" + new Random().Next(1000, 9999).ToString(),
+                    Modelo = "Modelo A" + new Random().Next(10, 99).ToString(),
+                    DataInstalacao = DateTime.Now.AddMonths(-new Random().Next(1, 24)),
+                    Status = "Ativo",
+                    Ativo = true
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar hidrômetros: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task LoadLeituras()
+    {
+        try
+        {
+            // Você precisará criar este método no LeituraService
+            // leituras = await LeituraService.GetLeiturasByUnidadeAsync(Id);
+
+            // Mock data for now
+            leituras = new List<LeituraDto>
+            {
+                new LeituraDto
+                {
+                    Id = Guid.NewGuid(),
+                    HidrometroId = hidrometros.FirstOrDefault()?.Id ?? Guid.NewGuid(),
+                    NumeroSerieHidrometro = hidrometros.FirstOrDefault()?.NumeroSerie ?? "H1234",
+                    UnidadeId = Id,
+                    LeituraAtual = 123.456m,
+                    DataLeitura = DateTime.Now.AddDays(-15),
+                    Consumo = 2.345m
+                },
+                new LeituraDto
+                {
+                    Id = Guid.NewGuid(),
+                    HidrometroId = hidrometros.FirstOrDefault()?.Id ?? Guid.NewGuid(),
+                    NumeroSerieHidrometro = hidrometros.FirstOrDefault()?.NumeroSerie ?? "H1234",
+                    UnidadeId = Id,
+                    LeituraAtual = 125.801m,
+                    DataLeitura = DateTime.Now.AddDays(-1),
+                    Consumo = 2.345m
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar leituras: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task LoadAlertas()
+    {
+        try
+        {
+            alertas = await AlertaService.GetAlertasByUnidadeAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar alertas: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task ResolverAlerta(Guid alertaId)
+    {
+        // Implementar depois
+        Snackbar.Add("Funcionalidade ainda não implementada", Severity.Info);
+    }
+
+    // Classe para HidrometroDto (temporária até criarmos o modelo de dados)
+    public class HidrometroDto
+    {
+        public Guid Id { get; set; }
+        public Guid UnidadeId { get; set; }
+        public string NumeroSerie { get; set; } = string.Empty;
+        public string? Modelo { get; set; }
+        public DateTime? DataInstalacao { get; set; }
+        public bool Ativo { get; set; } = true;
+        public string Status { get; set; } = string.Empty;
+    }
+
+    // Classe para LeituraDto (temporária até criarmos o modelo de dados)
+    public class LeituraDto
+    {
+        public Guid Id { get; set; }
+        public Guid HidrometroId { get; set; }
+        public string NumeroSerieHidrometro { get; set; } = string.Empty;
+        public Guid UnidadeId { get; set; }
+        public decimal LeituraAtual { get; set; }
+        public DateTime DataLeitura { get; set; }
+        public decimal Consumo { get; set; }
+    }
+}

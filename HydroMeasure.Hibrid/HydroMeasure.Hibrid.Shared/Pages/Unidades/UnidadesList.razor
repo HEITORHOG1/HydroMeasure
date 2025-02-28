@@ -1,0 +1,234 @@
+﻿@page "/unidades"
+@using HydroMeasure.Hibrid.Shared.Model.Unidade
+@using HydroMeasure.Hibrid.Shared.Services
+@inject NavigationManager NavigationManager
+@inject IUnidadeService UnidadeService
+@inject ISnackbar Snackbar
+
+<PageTitle>Lista de Unidades - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@breadcrumbs"></MudBreadcrumbs>
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <MudText Typo="Typo.h4">Unidades</MudText>
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => NavigationManager.NavigateTo("/unidades/novo"))">
+        Nova Unidade
+    </MudButton>
+</div>
+
+<MudPaper Class="pa-4">
+    <MudToolBar DisableGutters="true" Class="mb-4">
+        <MudTextField T="string"
+                      Value="@searchString"
+                      ValueChanged="@((string value) => OnSearchChanged(value))"
+                      Placeholder="Buscar unidade..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Class="mr-4"
+                      Immediate="true"
+                      Clearable="true" />
+
+        <MudSelect T="bool?"
+                   Value="@statusFilter"
+                   ValueChanged="@((bool? value) => OnStatusFilterChanged(value))"
+                   Placeholder="Status"
+                   Clearable="true"
+                   Class="mr-4">
+            <MudSelectItem Value="@((bool?)null)">Todos</MudSelectItem>
+            <MudSelectItem Value="@((bool?)true)">Ativos</MudSelectItem>
+            <MudSelectItem Value="@((bool?)false)">Inativos</MudSelectItem>
+        </MudSelect>
+
+        <MudSpacer />
+
+        <MudTooltip Text="Atualizar">
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="LoadUnidades" />
+        </MudTooltip>
+    </MudToolBar>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center my-4">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@filteredUnidades"
+                  Dense="false"
+                  Hover="true"
+                  Bordered="false"
+                  Striped="true"
+                  Loading="@isLoading"
+                  LoadingProgressColor="Color.Primary"
+                  Elevation="0">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<UnidadeDto, object>(x => x.Identificacao)">
+                        Identificação
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<UnidadeDto, object>(x => x.Tipo)">
+                        Tipo
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<UnidadeDto, object>(x => x.MoradorResponsavel)">
+                        Morador
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<UnidadeDto, object>(x => x.MediaConsumo)">
+                        Média (m³)
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Ações</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Identificação">@context.Identificacao</MudTd>
+                <MudTd DataLabel="Tipo">@context.Tipo</MudTd>
+                <MudTd DataLabel="Morador">@(string.IsNullOrEmpty(context.MoradorResponsavel) ? "-" : context.MoradorResponsavel)</MudTd>
+                <MudTd DataLabel="Média">@context.MediaConsumo.ToString("N2")</MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip Color="@(context.Ativo? Color.Success: Color.Error)"
+                             Size="Size.Small">
+                        @(context.Ativo ? "Ativo" : "Inativo")
+                    </MudChip>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Size="Size.Small"
+                                   Color="Color.Primary"
+                                   OnClick="@(() => NavigationManager.NavigateTo($"/unidades/editar/{context.Id}"))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Size="Size.Small"
+                                   Color="Color.Error"
+                                   OnClick="@(() => ConfirmDeleteUnidade(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                   Size="Size.Small"
+                                   Color="Color.Info"
+                                   OnClick="@(() => NavigationManager.NavigateTo($"/unidades/detalhes/{context.Id}"))" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+            <NoRecordsContent>
+                <MudText>Nenhuma unidade encontrada.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<BreadcrumbItem> breadcrumbs = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Dashboard", href: "/"),
+        new BreadcrumbItem("Unidades", href: "/unidades", disabled: true)
+    };
+
+    private List<UnidadeDto> unidades = new List<UnidadeDto>();
+    private List<UnidadeDto> filteredUnidades = new List<UnidadeDto>();
+    private bool isLoading = true;
+    private string searchString = "";
+    private bool? statusFilter = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUnidades();
+    }
+
+    // Métodos para tratar eventos ValueChanged
+    private void OnSearchChanged(string value)
+    {
+        searchString = value;
+        ApplyFilters();
+    }
+
+    private void OnStatusFilterChanged(bool? value)
+    {
+        statusFilter = value;
+        ApplyFilters();
+    }
+
+    private async Task LoadUnidades()
+    {
+        isLoading = true;
+
+        try
+        {
+            unidades = await UnidadeService.GetAllUnidadesAsync();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar unidades: {ex.Message}", Severity.Error);
+            unidades = new List<UnidadeDto>();
+            filteredUnidades = new List<UnidadeDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredUnidades = unidades
+            .Where(u => string.IsNullOrWhiteSpace(searchString) ||
+                    (u.Identificacao?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (u.MoradorResponsavel?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (u.Tipo?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Where(u => statusFilter == null || u.Ativo == statusFilter)
+            .ToList();
+    }
+
+    private async Task ConfirmDeleteUnidade(UnidadeDto unidade)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Confirmar exclusão",
+            $"Deseja realmente excluir a unidade {unidade.Identificacao}?",
+            yesText: "Excluir", noText: "Cancelar");
+
+        if (result == true)
+        {
+            await DeleteUnidade(unidade.Id);
+        }
+    }
+
+    private async Task DeleteUnidade(Guid id)
+    {
+        isLoading = true;
+
+        try
+        {
+            var result = await UnidadeService.DeleteUnidadeAsync(id);
+
+            if (result.Success)
+            {
+                Snackbar.Add("Unidade excluída com sucesso!", Severity.Success);
+                await LoadUnidades();
+            }
+            else
+            {
+                Snackbar.Add($"Erro ao excluir: {result.Message}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao excluir unidade: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    [Inject] private IDialogService DialogService { get; set; }
+}
