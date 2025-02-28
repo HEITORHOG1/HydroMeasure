@@ -1,7 +1,9 @@
+using HydroMeasure.Application.Commands.Alertas.Create;
 using HydroMeasure.Application.Commands.Condominios.Create;
 using HydroMeasure.Application.Commands.ConfiguracoesCondominio.Create;
 using HydroMeasure.Application.Commands.Hidrometros.Create;
 using HydroMeasure.Application.Commands.Leituras.Create;
+using HydroMeasure.Application.Commands.Relatorios.Create;
 using HydroMeasure.Application.Commands.Unidades.Create;
 using HydroMeasure.Application.Mappings;
 using HydroMeasure.Application.Services;
@@ -30,6 +32,8 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateHidrometroCommand).Assembly });
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateLeituraCommand).Assembly });
     cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateConfiguracaoCondominioCommand).Assembly });
+    cfg.RegisterServicesFromAssemblies(new[] { typeof(GerarRelatorioCommand).Assembly });
+    cfg.RegisterServicesFromAssemblies(new[] { typeof(CreateAlertaCommand).Assembly });
 });
 
 // ----------------------------------------------------------------------------
