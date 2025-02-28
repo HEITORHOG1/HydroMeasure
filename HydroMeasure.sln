@@ -15,13 +15,20 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Shared", "Hydr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Tests", "HydroMeasure.Tests\HydroMeasure.Tests.csproj", "{53C06D4A-89AF-4F26-95E5-9C41E4B977C8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI", "UI", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Hibrid", "HydroMeasure.Hibrid\HydroMeasure.Hibrid\HydroMeasure.Hibrid.csproj", "{1124021B-B932-4280-92E1-414BC7A55715}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Hibrid.Shared", "HydroMeasure.Hibrid\HydroMeasure.Hibrid.Shared\HydroMeasure.Hibrid.Shared.csproj", "{6A0A2DA8-84CB-45DF-8549-DD3C51CFEB35}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Hibrid.Web", "HydroMeasure.Hibrid\HydroMeasure.Hibrid.Web\HydroMeasure.Hibrid.Web.csproj", "{A56F0364-7445-436F-ACA6-13B2F5EAEE1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroMeasure.Hibrid.Web.Client", "HydroMeasure.Hibrid\HydroMeasure.Hibrid.Web.Client\HydroMeasure.Hibrid.Web.Client.csproj", "{D682AEFC-362A-4020-BB7F-711AA30D32F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C67211EA-8C51-4A2D-969C-8830878674F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -48,5 +55,33 @@ Global
 		{53C06D4A-89AF-4F26-95E5-9C41E4B977C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53C06D4A-89AF-4F26-95E5-9C41E4B977C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53C06D4A-89AF-4F26-95E5-9C41E4B977C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1124021B-B932-4280-92E1-414BC7A55715}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1124021B-B932-4280-92E1-414BC7A55715}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1124021B-B932-4280-92E1-414BC7A55715}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1124021B-B932-4280-92E1-414BC7A55715}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A0A2DA8-84CB-45DF-8549-DD3C51CFEB35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A0A2DA8-84CB-45DF-8549-DD3C51CFEB35}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A0A2DA8-84CB-45DF-8549-DD3C51CFEB35}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A0A2DA8-84CB-45DF-8549-DD3C51CFEB35}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A56F0364-7445-436F-ACA6-13B2F5EAEE1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A56F0364-7445-436F-ACA6-13B2F5EAEE1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A56F0364-7445-436F-ACA6-13B2F5EAEE1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A56F0364-7445-436F-ACA6-13B2F5EAEE1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D682AEFC-362A-4020-BB7F-711AA30D32F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D682AEFC-362A-4020-BB7F-711AA30D32F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D682AEFC-362A-4020-BB7F-711AA30D32F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D682AEFC-362A-4020-BB7F-711AA30D32F0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1124021B-B932-4280-92E1-414BC7A55715} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{6A0A2DA8-84CB-45DF-8549-DD3C51CFEB35} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A56F0364-7445-436F-ACA6-13B2F5EAEE1D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{D682AEFC-362A-4020-BB7F-711AA30D32F0} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7C55B760-DFA5-4692-AA1B-170D077B7CA1}
 	EndGlobalSection
 EndGlobal
