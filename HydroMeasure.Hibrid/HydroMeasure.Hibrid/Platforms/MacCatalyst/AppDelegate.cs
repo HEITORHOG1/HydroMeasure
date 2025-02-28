@@ -1,6 +1,6 @@
 ﻿using Foundation;
 
-namespace HydroMeasure.Hibrid
+namespace HydroMeasure.Hibrid.Platforms.MacCatalyst
 {
     [Register("AppDelegate")]
     public class AppDelegate : MauiUIApplicationDelegate

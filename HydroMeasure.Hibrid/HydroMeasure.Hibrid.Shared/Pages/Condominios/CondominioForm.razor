@@ -1,0 +1,316 @@
+﻿@page "/condominios/novo"
+@page "/condominios/editar/{Id:guid}"
+@using HydroMeasure.Hibrid.Shared.Model
+@using HydroMeasure.Hibrid.Shared.Model.Condominio
+@using HydroMeasure.Hibrid.Shared.Services
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+
+<PageTitle>@pageTitle - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@breadcrumbs"></MudBreadcrumbs>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@pageTitle</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else
+    {
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudCard Elevation="3">
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="model.Nome"
+                                          Label="Nome do Condomínio"
+                                          Required="true"
+                                          RequiredError="Nome é obrigatório"
+                                          MaxLength="200"
+                                          Counter="200" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="model.CNPJ"
+                                          Label="CNPJ"
+                                          Mask="@(new PatternMask("00.000.000/0000-00"))" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.Endereco"
+                                          Label="Endereço"
+                                          Required="true"
+                                          RequiredError="Endereço é obrigatório"
+                                          MaxLength="500"
+                                          Counter="500" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="model.Sindico"
+                                          Label="Nome do Síndico"
+                                          MaxLength="200" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="3">
+                            <MudTextField @bind-Value="model.TelefoneSindico"
+                                          Label="Telefone do Síndico"
+                                          Mask="@(new PatternMask("(00) 00000-0000"))" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="3">
+                            <MudTextField @bind-Value="model.EmailSindico"
+                                          Label="Email do Síndico"
+                                          Validation="@(new EmailValidator().Validation)" />
+                        </MudItem>
+
+                        @if (Id != null)
+                        {
+                            <MudItem xs="12">
+                                <MudSwitch @bind-Checked="model.Ativo"
+                                           Label="Ativo"
+                                           Color="Color.Primary" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudCardContent>
+
+                <MudCardActions>
+                    <MudButton OnClick="@(() => NavigationManager.NavigateTo("/condominios"))"
+                               Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               Class="mr-2">
+                        Cancelar
+                    </MudButton>
+
+                    <MudButton OnClick="@Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="@(!success || isSaving)">
+                        @if (isSaving)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Salvando</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Salvar</MudText>
+                        }
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudForm>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private string pageTitle => Id == null ? "Novo Condomínio" : "Editar Condomínio";
+    private List<BreadcrumbItem> breadcrumbs = new List<BreadcrumbItem>();
+
+    private MudForm form;
+    private bool success;
+    private bool isLoading = false;
+    private bool isSaving = false;
+
+    // The model is a union of properties from CreateCondominioCommand and UpdateCondominioCommand
+    private CondominioFormModel model = new CondominioFormModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        UpdateBreadcrumbs();
+
+        if (Id != null)
+        {
+            await LoadCondominio((Guid)Id);
+        }
+    }
+
+    private void UpdateBreadcrumbs()
+    {
+        breadcrumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Dashboard", href: "/"),
+            new BreadcrumbItem("Condomínios", href: "/condominios")
+        };
+
+        if (Id == null)
+        {
+            breadcrumbs.Add(new BreadcrumbItem("Novo", href: "/condominios/novo", disabled: true));
+        }
+        else
+        {
+            breadcrumbs.Add(new BreadcrumbItem("Editar", href: $"/condominios/editar/{Id}", disabled: true));
+        }
+    }
+
+    private async Task LoadCondominio(Guid id)
+    {
+        isLoading = true;
+
+        try
+        {
+            var condominio = await HttpClient.GetFromJsonAsync<CondominioDto>($"api/condominio/{id}");
+
+            if (condominio != null)
+            {
+                model = new CondominioFormModel
+                {
+                    Id = condominio.Id,
+                    Nome = condominio.Nome,
+                    Endereco = condominio.Endereco,
+                    CNPJ = condominio.CNPJ,
+                    Sindico = condominio.Sindico,
+                    TelefoneSindico = condominio.TelefoneSindico,
+                    EmailSindico = condominio.EmailSindico,
+                    Ativo = condominio.Ativo
+                };
+            }
+            else
+            {
+                Snackbar.Add("Condomínio não encontrado", Severity.Error);
+                NavigationManager.NavigateTo("/condominios");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar condomínio: {ex.Message}", Severity.Error);
+            NavigationManager.NavigateTo("/condominios");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Submit()
+    {
+        isSaving = true;
+
+        try
+        {
+            if (Id == null)
+            {
+                // Create new condominium
+                var createCommand = new CreateCondominioCommand
+                {
+                    Nome = model.Nome,
+                    Endereco = model.Endereco,
+                    CNPJ = model.CNPJ,
+                    Sindico = model.Sindico,
+                    TelefoneSindico = model.TelefoneSindico,
+                    EmailSindico = model.EmailSindico
+                };
+
+                var response = await HttpClient.PostAsJsonAsync("api/condominio", createCommand);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<OperationResult<CondominioDto>>();
+
+                    if (result != null && result.Success)
+                    {
+                        Snackbar.Add("Condomínio criado com sucesso!", Severity.Success);
+                        NavigationManager.NavigateTo("/condominios");
+                    }
+                    else
+                    {
+                        Snackbar.Add(result?.Message ?? "Erro ao criar condomínio", Severity.Error);
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+                    Snackbar.Add($"Erro ao criar: {error?.Detail ?? response.ReasonPhrase}", Severity.Error);
+                }
+            }
+            else
+            {
+                // Update existing condominium
+                var updateCommand = new UpdateCondominioCommand
+                {
+                    Id = model.Id ?? Guid.Empty,
+                    Nome = model.Nome,
+                    Endereco = model.Endereco,
+                    CNPJ = model.CNPJ,
+                    Sindico = model.Sindico,
+                    TelefoneSindico = model.TelefoneSindico,
+                    EmailSindico = model.EmailSindico,
+                    Ativo = model.Ativo
+                };
+
+                var response = await HttpClient.PutAsJsonAsync($"api/condominio/{updateCommand.Id}", updateCommand);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<OperationResult<CondominioDto>>();
+
+                    if (result != null && result.Success)
+                    {
+                        Snackbar.Add("Condomínio atualizado com sucesso!", Severity.Success);
+                        NavigationManager.NavigateTo("/condominios");
+                    }
+                    else
+                    {
+                        Snackbar.Add(result?.Message ?? "Erro ao atualizar condomínio", Severity.Error);
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+                    Snackbar.Add($"Erro ao atualizar: {error?.Detail ?? response.ReasonPhrase}", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao salvar condomínio: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // For convenience, here's our model class
+    private class CondominioFormModel
+    {
+        public Guid? Id { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string Endereco { get; set; } = string.Empty;
+        public string? CNPJ { get; set; }
+        public string? Sindico { get; set; }
+        public string? TelefoneSindico { get; set; }
+        public string? EmailSindico { get; set; }
+        public bool Ativo { get; set; } = true;
+    }
+
+    // Email validator
+    private class EmailValidator
+    {
+        public string Validation(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return null;
+
+            var isValid = System.Text.RegularExpressions.Regex.IsMatch(email,
+                @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+
+            return isValid ? null : "Email inválido";
+        }
+    }
+
+    // For simplicity, adding this class here - in real app, it should be imported from a shared location
+    public class ProblemDetails
+    {
+        public string? Type { get; set; }
+        public string? Title { get; set; }
+        public int? Status { get; set; }
+        public string? Detail { get; set; }
+        public string? Instance { get; set; }
+    }
+}

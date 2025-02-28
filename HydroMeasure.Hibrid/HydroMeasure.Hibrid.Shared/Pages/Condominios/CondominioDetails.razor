@@ -1,0 +1,479 @@
+﻿@page "/condominios/detalhes/{Id:guid}"
+@using HydroMeasure.Hibrid.Shared.Model.Alerta
+@using HydroMeasure.Hibrid.Shared.Model.Condominio
+@using HydroMeasure.Hibrid.Shared.Model.ConfiguracaoCondominio
+@using HydroMeasure.Hibrid.Shared.Model.Unidade
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+
+<PageTitle>Detalhes do Condomínio - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@_breadcrumbs"></MudBreadcrumbs>
+
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (condominio == null)
+    {
+        <MudAlert Severity="Severity.Error">Condomínio não encontrado.</MudAlert>
+    }
+    else
+    {
+        <div class="d-flex justify-space-between align-center mb-4">
+            <MudText Typo="Typo.h4">Detalhes do Condomínio</MudText>
+            <div>
+                <MudButton Variant="Variant.Filled" 
+                          Color="Color.Primary" 
+                          StartIcon="@Icons.Material.Filled.Edit" 
+                          OnClick="@(() => NavigationManager.NavigateTo($"/condominios/editar/{Id}"))">
+                    Editar
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" 
+                          Color="Color.Default" 
+                          StartIcon="@Icons.Material.Filled.ArrowBack"
+                          Class="ml-2"
+                          OnClick="@(() => NavigationManager.NavigateTo("/condominios"))">
+                    Voltar
+                </MudButton>
+            </div>
+        </div>
+
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudCard Elevation="3" Class="mb-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Informações Gerais</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudChip Color="@(condominio.Ativo ? Color.Success : Color.Error)" 
+                                   Size="Size.Small">
+                                @(condominio.Ativo ? "Ativo" : "Inativo")
+                            </MudChip>
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudList>
+                            <MudListItem>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Nome:</strong> @condominio.Nome
+                                </MudText>
+                            </MudListItem>
+                            <MudListItem>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Endereço:</strong> @condominio.Endereco
+                                </MudText>
+                            </MudListItem>
+                            <MudListItem>
+                                <MudText Typo="Typo.body1">
+                                    <strong>CNPJ:</strong> @(string.IsNullOrEmpty(condominio.CNPJ) ? "Não informado" : condominio.CNPJ)
+                                </MudText>
+                            </MudListItem>
+                        </MudList>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudCard Elevation="3" Class="mb-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Informações do Síndico</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudList>
+                            <MudListItem>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Nome:</strong> @(string.IsNullOrEmpty(condominio.Sindico) ? "Não informado" : condominio.Sindico)
+                                </MudText>
+                            </MudListItem>
+                            <MudListItem>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Telefone:</strong> @(string.IsNullOrEmpty(condominio.TelefoneSindico) ? "Não informado" : condominio.TelefoneSindico)
+                                </MudText>
+                            </MudListItem>
+                            <MudListItem>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Email:</strong> @(string.IsNullOrEmpty(condominio.EmailSindico) ? "Não informado" : condominio.EmailSindico)
+                                </MudText>
+                            </MudListItem>
+                        </MudList>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <MudTabs Elevation="3" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+            <MudTabPanel Text="Unidades" Icon="@Icons.Material.Filled.Home">
+                <MudCard Elevation="0">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Unidades</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudButton Variant="Variant.Filled" 
+                                      Color="Color.Primary" 
+                                      Size="Size.Small"
+                                      StartIcon="@Icons.Material.Filled.Add" 
+                                      Href="@($"/unidades/novo?condominioId={Id}")">
+                                Nova Unidade
+                            </MudButton>
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @if (unidades.Count == 0)
+                        {
+                            <MudAlert Severity="Severity.Info">
+                                Nenhuma unidade cadastrada para este condomínio.
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudTable Items="@unidades" Hover="true" Striped="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>ID</MudTh>
+                                    <MudTh>Identificação</MudTh>
+                                    <MudTh>Tipo</MudTh>
+                                    <MudTh>Morador</MudTh>
+                                    <MudTh>Status</MudTh>
+                                    <MudTh>Ações</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="ID">@context.Id</MudTd>
+                                    <MudTd DataLabel="Identificação">@context.Identificacao</MudTd>
+                                    <MudTd DataLabel="Tipo">@context.Tipo</MudTd>
+                                    <MudTd DataLabel="Morador">@(string.IsNullOrEmpty(context.MoradorResponsavel) ? "Não informado" : context.MoradorResponsavel)</MudTd>
+                                    <MudTd DataLabel="Status">
+                                        <MudChip Color="@(context.Ativo ? Color.Success : Color.Error)" 
+                                               Size="Size.Small">
+                                            @(context.Ativo ? "Ativo" : "Inativo")
+                                        </MudChip>
+                                    </MudTd>
+                                    <MudTd>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                                     Size="Size.Small" 
+                                                     Color="Color.Primary" 
+                                                     OnClick="@(() => NavigationManager.NavigateTo($"/unidades/editar/{context.Id}"))" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Info" 
+                                                     Size="Size.Small" 
+                                                     Color="Color.Info" 
+                                                     OnClick="@(() => NavigationManager.NavigateTo($"/unidades/detalhes/{context.Id}"))" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudTabPanel>
+            <MudTabPanel Text="Configurações" Icon="@Icons.Material.Filled.Settings">
+                <MudCard Elevation="0">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Configurações do Condomínio</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            @if (configuracao != null)
+                            {
+                                <MudButton Variant="Variant.Filled" 
+                                          Color="Color.Primary" 
+                                          Size="Size.Small"
+                                          StartIcon="@Icons.Material.Filled.Edit" 
+                                          Href="@($"/configuracoes/editar/{configuracao.Id}")">
+                                    Editar
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Filled" 
+                                          Color="Color.Primary" 
+                                          Size="Size.Small"
+                                          StartIcon="@Icons.Material.Filled.Add" 
+                                          Href="@($"/configuracoes/novo?condominioId={Id}")">
+                                    Configurar
+                                </MudButton>
+                            }
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @if (configuracao == null)
+                        {
+                            <MudAlert Severity="Severity.Info">
+                                Nenhuma configuração encontrada para este condomínio.
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudList>
+                                <MudListItem>
+                                    <MudText Typo="Typo.body1">
+                                        <strong>Método de Cálculo de Média:</strong> @configuracao.MetodoCalculoMedia
+                                    </MudText>
+                                </MudListItem>
+                                <MudListItem>
+                                    <MudText Typo="Typo.body1">
+                                        <strong>Formato de Relatório:</strong> @configuracao.FormatoRelatorio
+                                    </MudText>
+                                </MudListItem>
+                                <MudListItem>
+                                    <MudText Typo="Typo.body1">
+                                        <strong>Periodicidade de Alerta:</strong> @configuracao.PeriodicidadeAlerta
+                                    </MudText>
+                                </MudListItem>
+                                <MudListItem>
+                                    <MudText Typo="Typo.body1">
+                                        <strong>Valor do Metro Cúbico:</strong> R$ @configuracao.ValorMetroCubico.ToString("N2")
+                                    </MudText>
+                                </MudListItem>
+                            </MudList>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudTabPanel>
+            <MudTabPanel Text="Alertas" Icon="@Icons.Material.Filled.Notifications">
+                <MudCard Elevation="0">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Alertas do Condomínio</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @if (alertas.Count == 0)
+                        {
+                            <MudAlert Severity="Severity.Info">
+                                Nenhum alerta registrado para este condomínio.
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudTable Items="@alertas" Hover="true" Striped="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Unidade</MudTh>
+                                    <MudTh>Tipo</MudTh>
+                                    <MudTh>Mensagem</MudTh>
+                                    <MudTh>Data</MudTh>
+                                    <MudTh>Status</MudTh>
+                                    <MudTh>Ações</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Unidade">@context.IdentificacaoUnidade</MudTd>
+                                    <MudTd DataLabel="Tipo">@context.Tipo</MudTd>
+                                    <MudTd DataLabel="Mensagem">@context.Mensagem</MudTd>
+                                    <MudTd DataLabel="Data">@context.DataAlerta.ToString("dd/MM/yyyy HH:mm")</MudTd>
+                                    <MudTd DataLabel="Status">
+                                        <MudChip Color="@(context.Resolvido ? Color.Success : Color.Error)" 
+                                               Size="Size.Small">
+                                            @(context.Resolvido ? "Resolvido" : "Pendente")
+                                        </MudChip>
+                                    </MudTd>
+                                    <MudTd>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Info" 
+                                                     Size="Size.Small" 
+                                                     Color="Color.Info" 
+                                                     OnClick="@(() => NavigationManager.NavigateTo($"/alertas/detalhes/{context.Id}"))" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudTabPanel>
+        </MudTabs>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+    
+    private List<BreadcrumbItem> _breadcrumbs = new List<BreadcrumbItem>();
+    private bool isLoading = true;
+    
+    private CondominioDto? condominio;
+    private ConfiguracaoCondominioDto? configuracao;
+    private List<UnidadeDto> unidades = new List<UnidadeDto>();
+    private List<AlertaDto> alertas = new List<AlertaDto>();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        UpdateBreadcrumbs();
+        await LoadData();
+    }
+    
+    private void UpdateBreadcrumbs()
+    {
+        _breadcrumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Dashboard", href: "/"),
+            new BreadcrumbItem("Condomínios", href: "/condominios"),
+            new BreadcrumbItem("Detalhes", href: $"/condominios/detalhes/{Id}", disabled: true)
+        };
+    }
+    
+    private async Task LoadData()
+    {
+        isLoading = true;
+        
+        try
+        {
+            condominio = await HttpClient.GetFromJsonAsync<CondominioDto>($"api/condominio/{Id}");
+            
+            if (condominio != null)
+            {
+                await Task.WhenAll(
+                    LoadConfiguracao(),
+                    LoadUnidades(),
+                    LoadAlertas()
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar dados do condomínio: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task LoadConfiguracao()
+    {
+        try
+        {
+            // This is a mock endpoint, replace with your actual API endpoint
+            // Example: configuracao = await HttpClient.GetFromJsonAsync<ConfiguracaoCondominioDto>($"api/configuracaocondominio/condominio/{Id}");
+            
+            // Mock data for development
+            await Task.Delay(300); // Simulate API call delay
+            configuracao = new ConfiguracaoCondominioDto(
+                Guid.NewGuid(),
+                Id,
+                "MediaSimples",
+                "PDF",
+                "Mensal",
+                8.75m
+            );
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar configurações: {ex.Message}", Severity.Warning);
+        }
+    }
+    
+    private async Task LoadUnidades()
+    {
+        try
+        {
+            // This is a mock endpoint, replace with your actual API endpoint
+            // Example: unidades = await HttpClient.GetFromJsonAsync<List<UnidadeDto>>($"api/unidade/condominio/{Id}") ?? new List<UnidadeDto>();
+            
+            // Mock data for development
+            await Task.Delay(300); // Simulate API call delay
+            unidades = new List<UnidadeDto>
+            {
+                new UnidadeDto(
+                    Guid.NewGuid(),
+                    Id,
+                    "Apto 101",
+                    "Residencial",
+                    "João Silva",
+                    15.5m,
+                    true,
+                    "Ativo"
+                ),
+                new UnidadeDto(
+                    Guid.NewGuid(),
+                    Id,
+                    "Apto 102",
+                    "Residencial",
+                    "Maria Santos",
+                    12.3m,
+                    true,
+                    "Ativo"
+                ),
+                new UnidadeDto(
+                    Guid.NewGuid(),
+                    Id,
+                    "Apto 201",
+                    "Residencial",
+                    "Pedro Oliveira",
+                    14.2m,
+                    true,
+                    "Ativo"
+                ),
+                new UnidadeDto(
+                    Guid.NewGuid(),
+                    Id,
+                    "Apto 202",
+                    "Residencial",
+                    null,
+                    0m,
+                    false,
+                    "Inativo"
+                ),
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar unidades: {ex.Message}", Severity.Warning);
+        }
+    }
+    
+    private async Task LoadAlertas()
+    {
+        try
+        {
+            // This is a mock endpoint, replace with your actual API endpoint
+            // Example: alertas = await HttpClient.GetFromJsonAsync<List<AlertaDto>>($"api/alerta/condominio/{Id}") ?? new List<AlertaDto>();
+            
+            // Mock data for development
+            await Task.Delay(300); // Simulate API call delay
+            alertas = new List<AlertaDto>
+            {
+                new AlertaDto(
+                    Guid.NewGuid(),
+                    unidades.FirstOrDefault()?.Id ?? Guid.Empty,
+                    Id,
+                    "Apto 101",
+                    "ConsumoAcimaMedia",
+                    "Consumo 35% acima da média mensal",
+                    DateTime.Now.AddDays(-2),
+                    false,
+                    null,
+                    null
+                ),
+                new AlertaDto(
+                    Guid.NewGuid(),
+                    unidades.Skip(1).FirstOrDefault()?.Id ?? Guid.Empty,
+                    Id,
+                    "Apto 102",
+                    "LeituraAnormal",
+                    "Detecção de possível vazamento",
+                    DateTime.Now.AddDays(-5),
+                    true,
+                    Guid.NewGuid(),
+                    "Administrador"
+                ),
+                new AlertaDto(
+                    Guid.NewGuid(),
+                    unidades.Skip(2).FirstOrDefault()?.Id ?? Guid.Empty,
+                    Id,
+                    "Apto 201",
+                    "HidrometroDefeituoso",
+                    "Hidrômetro com leituras inconsistentes",
+                    DateTime.Now.AddDays(-8),
+                    false,
+                    null,
+                    null
+                ),
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar alertas: {ex.Message}", Severity.Warning);
+        }
+    }
+}

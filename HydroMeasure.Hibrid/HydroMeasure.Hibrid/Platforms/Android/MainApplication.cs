@@ -1,12 +1,12 @@
 ﻿using Android.App;
 using Android.Runtime;
 
-namespace HydroMeasure.Hibrid
+namespace HydroMeasure.Hibrid.Platforms.Android
 {
     [Application]
     public class MainApplication : MauiApplication
     {
-        public MainApplication(IntPtr handle, JniHandleOwnership ownership)
+        public MainApplication(nint handle, JniHandleOwnership ownership)
             : base(handle, ownership)
         {
         }

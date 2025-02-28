@@ -1,30 +1,51 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">HydroMeasure.Hibrid</a>
-    </div>
-</div>
+﻿<MudNavMenu>
+    <MudText Typo="Typo.h6" Class="px-4 py-2 mud-text-secondary">Menu</MudText>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    <MudDivider />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+        Dashboard
+    </MudNavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+    <MudNavGroup Title="Condomínio" Icon="@Icons.Material.Filled.Apartment" Expanded="true">
+        <MudNavLink Href="condominios" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">
+            Lista de Condomínios
+        </MudNavLink>
+        <MudNavLink Href="condominios/novo" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">
+            Novo Condomínio
+        </MudNavLink>
+    </MudNavGroup>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    <MudNavGroup Title="Unidades" Icon="@Icons.Material.Filled.Home" Expanded="true">
+        <MudNavLink Href="unidades" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">
+            Lista de Unidades
+        </MudNavLink>
+        <MudNavLink Href="unidades/novo" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">
+            Nova Unidade
+        </MudNavLink>
+    </MudNavGroup>
 
+    <MudNavGroup Title="Hidrômetros" Icon="@Icons.Material.Filled.WaterDrop" Expanded="true">
+        <MudNavLink Href="hidrometros" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">
+            Lista de Hidrômetros
+        </MudNavLink>
+        <MudNavLink Href="hidrometros/novo" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">
+            Novo Hidrômetro
+        </MudNavLink>
+        <MudNavLink Href="leituras/novo" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AddCircle">
+            Nova Leitura
+        </MudNavLink>
+    </MudNavGroup>
+
+    <MudNavLink Href="alertas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Notifications">
+        Alertas
+    </MudNavLink>
+
+    <MudNavLink Href="relatorios" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">
+        Relatórios
+    </MudNavLink>
+
+    <MudNavLink Href="configuracoes" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">
+        Configurações
+    </MudNavLink>
+</MudNavMenu>

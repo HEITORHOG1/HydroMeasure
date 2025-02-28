@@ -1,7 +1,6 @@
-﻿using ObjCRuntime;
-using UIKit;
+﻿using UIKit;
 
-namespace HydroMeasure.Hibrid
+namespace HydroMeasure.Hibrid.Platforms.MacCatalyst
 {
     public class Program
     {

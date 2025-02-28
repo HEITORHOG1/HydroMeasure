@@ -5,15 +5,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
-    <link rel="stylesheet" href="_content/HydroMeasure.Hibrid.Shared/bootstrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="_content/HydroMeasure.Hibrid.Shared/app.css" />
+
+    <!-- MudBlazor Stylesheet -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+
     <link rel="stylesheet" href="HydroMeasure.Hibrid.Web.styles.css" />
     <link rel="icon" type="image/png" href="_content/HydroMeasure.Hibrid.Shared/favicon.png" />
     <HeadOutlet @rendermode="InteractiveAuto" />
+    <title>HydroMeasure</title>
 </head>
 
 <body>
     <Routes @rendermode="InteractiveAuto" />
+
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="_framework/blazor.web.js"></script>
 </body>
 

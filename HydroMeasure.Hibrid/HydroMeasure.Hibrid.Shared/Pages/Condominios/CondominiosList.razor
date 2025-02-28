@@ -1,0 +1,283 @@
+﻿@page "/condominios"
+@using HydroMeasure.Hibrid.Shared.Model.Condominio
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+
+<PageTitle>Lista de Condomínios - HydroMeasure</PageTitle>
+
+<MudBreadcrumbs Items="@breadcrumbs"></MudBreadcrumbs>
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <MudText Typo="Typo.h4">Condomínios</MudText>
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => NavigationManager.NavigateTo("/condominios/novo"))">
+        Novo Condomínio
+    </MudButton>
+</div>
+
+<MudPaper Class="pa-4">
+    <MudToolBar DisableGutters="true" Class="mb-4">
+        <MudTextField @bind-Value="searchString"
+                      Placeholder="Buscar condomínio..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Class="mr-4"
+                      Immediate="true"
+                      Clearable="true" />
+
+        <MudSelect @bind-Value="statusFilter"
+                   Placeholder="Status"
+                   Clearable="true"
+                   Class="mr-4"
+                   T="bool?">
+            <MudSelectItem Value="@((bool?)null)">Todos</MudSelectItem>
+            <MudSelectItem Value="@((bool?)true)">Ativos</MudSelectItem>
+            <MudSelectItem Value="@((bool?)false)">Inativos</MudSelectItem>
+        </MudSelect>
+
+        <MudSpacer />
+
+        <MudTooltip Text="Atualizar">
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="LoadCondominios" />
+        </MudTooltip>
+    </MudToolBar>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center my-4">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@filteredCondominios"
+                  Dense="false"
+                  Hover="true"
+                  Bordered="false"
+                  Striped="true"
+                  Loading="@isLoading"
+                  LoadingProgressColor="Color.Primary"
+                  Elevation="0">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<CondominioDto, object>(x => x.Nome)">
+                        Nome
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<CondominioDto, object>(x => x.Endereco)">
+                        Endereço
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<CondominioDto, object>(x => x.Sindico)">
+                        Síndico
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Ações</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nome">@context.Nome</MudTd>
+                <MudTd DataLabel="Endereço">@context.Endereco</MudTd>
+                <MudTd DataLabel="Síndico">@context.Sindico</MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip Color="@(context.Ativo? Color.Success: Color.Error)"
+                             Size="Size.Small">
+                        @(context.Ativo ? "Ativo" : "Inativo")
+                    </MudChip>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Size="Size.Small"
+                                   Color="Color.Primary"
+                                   OnClick="@(() => NavigationManager.NavigateTo($"/condominios/editar/{context.Id}"))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Size="Size.Small"
+                                   Color="Color.Error"
+                                   OnClick="@(() => ConfirmDeleteCondominio(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                   Size="Size.Small"
+                                   Color="Color.Info"
+                                   OnClick="@(() => NavigationManager.NavigateTo($"/condominios/detalhes/{context.Id}"))" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+            <NoRecordsContent>
+                <MudText>Nenhum condomínio encontrado.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<BreadcrumbItem> breadcrumbs = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Dashboard", href: "/"),
+        new BreadcrumbItem("Condomínios", href: "/condominios", disabled: true)
+    };
+
+    private List<CondominioDto> condominios = new List<CondominioDto>();
+    private List<CondominioDto> filteredCondominios = new List<CondominioDto>();
+    private bool isLoading = true;
+    private string searchString = "";
+    private bool? statusFilter = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCondominios();
+    }
+
+    private async Task LoadCondominios()
+    {
+        isLoading = true;
+
+        try
+        {
+            condominios = await HttpClient.GetFromJsonAsync<List<CondominioDto>>("api/condominio") ?? new List<CondominioDto>();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar condomínios: {ex.Message}", Severity.Error);
+            condominios = new List<CondominioDto>();
+            filteredCondominios = new List<CondominioDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredCondominios = condominios
+            .Where(c => string.IsNullOrWhiteSpace(searchString) ||
+                    (c.Nome?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (c.Endereco?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (c.Sindico?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Where(c => statusFilter == null || c.Ativo == statusFilter)
+            .ToList();
+    }
+
+    private async Task ConfirmDeleteCondominio(CondominioDto condominio)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Confirmar exclusão",
+            $"Deseja realmente excluir o condomínio {condominio.Nome}?",
+            yesText: "Excluir", noText: "Cancelar");
+
+        if (result == true)
+        {
+            await DeleteCondominio(condominio.Id);
+        }
+    }
+
+    private async Task DeleteCondominio(Guid id)
+    {
+        isLoading = true;
+
+        try
+        {
+            var response = await HttpClient.DeleteAsync($"api/condominio/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Condomínio excluído com sucesso!", Severity.Success);
+                await LoadCondominios();
+            }
+            else
+            {
+                var error = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+                Snackbar.Add($"Erro ao excluir: {error?.Detail ?? response.ReasonPhrase}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao excluir condomínio: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // Sample data for testing
+    protected override void OnInitialized()
+    {
+        // Initialize with sample data for development
+        condominios = new List<CondominioDto>
+        {
+            new CondominioDto(
+                Guid.NewGuid(),
+                "Condomínio Solar",
+                "Av. Principal, 456",
+                "98.765.432/0001-10",
+                "Maria Santos",
+                "(11) 91234-5678",
+                "Maria@exemplo.com",
+                true
+            ),
+            new CondominioDto(
+                Guid.NewGuid(),
+                "Condomínio Solar",
+                "Av. Principal, 456",
+                "98.765.432/0001-10",
+                "Maria Santos",
+                "(11) 91234-5678",
+                "maria.santos@email.com",
+                true
+            ),
+            new CondominioDto(
+                Guid.NewGuid(),
+                "Residencial Parque Verde",
+                "Rua dos Ipês, 789",
+                "45.678.901/0001-23",
+                "Pedro Oliveira",
+                "(11) 94567-8901",
+                "pedro.oliveira@email.com",
+                true
+            ),
+            new CondominioDto(
+                Guid.NewGuid(),
+                "Edifício Montanha",
+                "Av. das Montanhas, 321",
+                "78.901.234/0001-56",
+                "Ana Costa",
+                "(11) 97890-1234",
+                "ana.costa@email.com",
+                false
+            ),
+            new CondominioDto(
+                Guid.NewGuid(),
+                "Condomínio Vale das Águas",
+                "Rua dos Rios, 654",
+                "23.456.789/0001-89",
+                "Carlos Souza",
+                "(11) 93456-7890",
+                "carlos.souza@email.com",
+                true
+            ),
+        };
+
+        ApplyFilters();
+    }
+
+    // For simplicity, adding this class here - in real app, it should be imported from a shared location
+    public class ProblemDetails
+    {
+        public string? Type { get; set; }
+        public string? Title { get; set; }
+        public int? Status { get; set; }
+        public string? Detail { get; set; }
+        public string? Instance { get; set; }
+    }
+
+    [Inject] private IDialogService DialogService { get; set; }
+}
