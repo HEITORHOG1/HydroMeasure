@@ -90,14 +90,13 @@
                                              HideSpinButtons="false" />
                         </MudItem>
 
-                        <MudItem xs="12" md="6">
-                            <MudDatePicker @bind-Date="model.DataLeitura"
-                                           Label="Data da Leitura"
-                                           Required="true"
-                                           RequiredError="Data é obrigatória"
-                                           DateFormat="dd/MM/yyyy"
-                                           MaxDate="@DateTime.Now" />
-                        </MudItem>
+                        <MudDatePicker Date="model.DataLeitura"
+                                       DateChanged="value => model.DataLeitura = value ?? DateTime.Today"
+                                       Label="Data da Leitura"
+                                       Required="true"
+                                       RequiredError="Data é obrigatória"
+                                       DateFormat="dd/MM/yyyy"
+                                       MaxDate="@DateTime.Now" />
 
                         @if (Id != null)
                         {
