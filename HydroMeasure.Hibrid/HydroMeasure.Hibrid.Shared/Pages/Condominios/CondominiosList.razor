@@ -1,7 +1,8 @@
 ﻿@page "/condominios"
 @using HydroMeasure.Hibrid.Shared.Model.Condominio
+@using HydroMeasure.Hibrid.Shared.Services
 @inject NavigationManager NavigationManager
-@inject HttpClient HttpClient
+@inject ICondominioService CondominioService
 @inject ISnackbar Snackbar
 
 <PageTitle>Lista de Condomínios - HydroMeasure</PageTitle>
@@ -20,7 +21,10 @@
 
 <MudPaper Class="pa-4">
     <MudToolBar DisableGutters="true" Class="mb-4">
-        <MudTextField @bind-Value="searchString"
+        <!-- Especificamos o tipo genérico correto para o evento -->
+        <MudTextField T="string"
+                      Value="@searchString"
+                      ValueChanged="@((string value) => OnSearchChanged(value))"
                       Placeholder="Buscar condomínio..."
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
@@ -29,11 +33,13 @@
                       Immediate="true"
                       Clearable="true" />
 
-        <MudSelect @bind-Value="statusFilter"
+        <!-- Especificamos o tipo genérico correto para o evento -->
+        <MudSelect T="bool?"
+                   Value="@statusFilter"
+                   ValueChanged="@((bool? value) => OnStatusFilterChanged(value))"
                    Placeholder="Status"
                    Clearable="true"
-                   Class="mr-4"
-                   T="bool?">
+                   Class="mr-4">
             <MudSelectItem Value="@((bool?)null)">Todos</MudSelectItem>
             <MudSelectItem Value="@((bool?)true)">Ativos</MudSelectItem>
             <MudSelectItem Value="@((bool?)false)">Inativos</MudSelectItem>
@@ -84,7 +90,7 @@
             <RowTemplate>
                 <MudTd DataLabel="Nome">@context.Nome</MudTd>
                 <MudTd DataLabel="Endereço">@context.Endereco</MudTd>
-                <MudTd DataLabel="Síndico">@context.Sindico</MudTd>
+                <MudTd DataLabel="Síndico">@(string.IsNullOrEmpty(context.Sindico) ? "-" : context.Sindico)</MudTd>
                 <MudTd DataLabel="Status">
                     <MudChip Color="@(context.Ativo? Color.Success: Color.Error)"
                              Size="Size.Small">
@@ -134,13 +140,26 @@
         await LoadCondominios();
     }
 
+    // Métodos para tratar eventos ValueChanged
+    private void OnSearchChanged(string value)
+    {
+        searchString = value;
+        ApplyFilters();
+    }
+
+    private void OnStatusFilterChanged(bool? value)
+    {
+        statusFilter = value;
+        ApplyFilters();
+    }
+
     private async Task LoadCondominios()
     {
         isLoading = true;
 
         try
         {
-            condominios = await HttpClient.GetFromJsonAsync<List<CondominioDto>>("api/condominio") ?? new List<CondominioDto>();
+            condominios = await CondominioService.GetAllCondominiosAsync();
             ApplyFilters();
         }
         catch (Exception ex)
@@ -185,17 +204,16 @@
 
         try
         {
-            var response = await HttpClient.DeleteAsync($"api/condominio/{id}");
+            var result = await CondominioService.DeleteCondominioAsync(id);
 
-            if (response.IsSuccessStatusCode)
+            if (result.Success)
             {
                 Snackbar.Add("Condomínio excluído com sucesso!", Severity.Success);
                 await LoadCondominios();
             }
             else
             {
-                var error = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-                Snackbar.Add($"Erro ao excluir: {error?.Detail ?? response.ReasonPhrase}", Severity.Error);
+                Snackbar.Add($"Erro ao excluir: {result.Message}", Severity.Error);
             }
         }
         catch (Exception ex)
@@ -206,77 +224,6 @@
         {
             isLoading = false;
         }
-    }
-
-    // Sample data for testing
-    protected override void OnInitialized()
-    {
-        // Initialize with sample data for development
-        condominios = new List<CondominioDto>
-        {
-            new CondominioDto(
-                Guid.NewGuid(),
-                "Condomínio Solar",
-                "Av. Principal, 456",
-                "98.765.432/0001-10",
-                "Maria Santos",
-                "(11) 91234-5678",
-                "Maria@exemplo.com",
-                true
-            ),
-            new CondominioDto(
-                Guid.NewGuid(),
-                "Condomínio Solar",
-                "Av. Principal, 456",
-                "98.765.432/0001-10",
-                "Maria Santos",
-                "(11) 91234-5678",
-                "maria.santos@email.com",
-                true
-            ),
-            new CondominioDto(
-                Guid.NewGuid(),
-                "Residencial Parque Verde",
-                "Rua dos Ipês, 789",
-                "45.678.901/0001-23",
-                "Pedro Oliveira",
-                "(11) 94567-8901",
-                "pedro.oliveira@email.com",
-                true
-            ),
-            new CondominioDto(
-                Guid.NewGuid(),
-                "Edifício Montanha",
-                "Av. das Montanhas, 321",
-                "78.901.234/0001-56",
-                "Ana Costa",
-                "(11) 97890-1234",
-                "ana.costa@email.com",
-                false
-            ),
-            new CondominioDto(
-                Guid.NewGuid(),
-                "Condomínio Vale das Águas",
-                "Rua dos Rios, 654",
-                "23.456.789/0001-89",
-                "Carlos Souza",
-                "(11) 93456-7890",
-                "carlos.souza@email.com",
-                true
-            ),
-        };
-
-        ApplyFilters();
-    }
-
-    // For simplicity, adding this class here - in real app, it should be imported from a shared location
-    public class ProblemDetails
-    {
-        public string? Type { get; set; }
-        public string? Title { get; set; }
-        public int? Status { get; set; }
-        public string? Detail { get; set; }
-        public string? Instance { get; set; }
     }
 
     [Inject] private IDialogService DialogService { get; set; }

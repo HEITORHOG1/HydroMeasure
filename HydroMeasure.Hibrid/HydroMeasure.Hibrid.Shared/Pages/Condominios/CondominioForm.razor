@@ -1,10 +1,9 @@
 ﻿@page "/condominios/novo"
 @page "/condominios/editar/{Id:guid}"
-@using HydroMeasure.Hibrid.Shared.Model
 @using HydroMeasure.Hibrid.Shared.Model.Condominio
 @using HydroMeasure.Hibrid.Shared.Services
 @inject NavigationManager NavigationManager
-@inject HttpClient HttpClient
+@inject ICondominioService CondominioService
 @inject ISnackbar Snackbar
 
 <PageTitle>@pageTitle - HydroMeasure</PageTitle>
@@ -36,7 +35,8 @@
                         <MudItem xs="12" md="6">
                             <MudTextField @bind-Value="model.CNPJ"
                                           Label="CNPJ"
-                                          Mask="@(new PatternMask("00.000.000/0000-00"))" />
+                                          Mask="@(new PatternMask("00.000.000/0000-00"))"
+                                          Validation="@ValidateCNPJ" />
                         </MudItem>
 
                         <MudItem xs="12">
@@ -63,7 +63,7 @@
                         <MudItem xs="12" md="3">
                             <MudTextField @bind-Value="model.EmailSindico"
                                           Label="Email do Síndico"
-                                          Validation="@(new EmailValidator().Validation)" />
+                                          Validation="@ValidateEmail" />
                         </MudItem>
 
                         @if (Id != null)
@@ -117,7 +117,7 @@
     private bool isLoading = false;
     private bool isSaving = false;
 
-    // The model is a union of properties from CreateCondominioCommand and UpdateCondominioCommand
+    // Modelo para o formulário
     private CondominioFormModel model = new CondominioFormModel();
 
     protected override async Task OnInitializedAsync()
@@ -154,7 +154,7 @@
 
         try
         {
-            var condominio = await HttpClient.GetFromJsonAsync<CondominioDto>($"api/condominio/{id}");
+            var condominio = await CondominioService.GetCondominioByIdAsync(id);
 
             if (condominio != null)
             {
@@ -206,26 +206,20 @@
                     EmailSindico = model.EmailSindico
                 };
 
-                var response = await HttpClient.PostAsJsonAsync("api/condominio", createCommand);
+                var result = await CondominioService.CreateCondominioAsync(createCommand);
 
-                if (response.IsSuccessStatusCode)
+                if (result.Success)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<OperationResult<CondominioDto>>();
-
-                    if (result != null && result.Success)
-                    {
-                        Snackbar.Add("Condomínio criado com sucesso!", Severity.Success);
-                        NavigationManager.NavigateTo("/condominios");
-                    }
-                    else
-                    {
-                        Snackbar.Add(result?.Message ?? "Erro ao criar condomínio", Severity.Error);
-                    }
+                    Snackbar.Add("Condomínio criado com sucesso!", Severity.Success);
+                    // Adicionamos StateHasChanged para garantir que a UI seja atualizada
+                    StateHasChanged();
+                    // Adicionamos um pequeno delay para garantir que a notificação seja exibida
+                    await Task.Delay(500);
+                    NavigationManager.NavigateTo("/condominios", forceLoad: true);
                 }
                 else
                 {
-                    var error = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-                    Snackbar.Add($"Erro ao criar: {error?.Detail ?? response.ReasonPhrase}", Severity.Error);
+                    Snackbar.Add(result.Message, Severity.Error);
                 }
             }
             else
@@ -243,26 +237,20 @@
                     Ativo = model.Ativo
                 };
 
-                var response = await HttpClient.PutAsJsonAsync($"api/condominio/{updateCommand.Id}", updateCommand);
+                var result = await CondominioService.UpdateCondominioAsync(updateCommand.Id, updateCommand);
 
-                if (response.IsSuccessStatusCode)
+                if (result.Success)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<OperationResult<CondominioDto>>();
-
-                    if (result != null && result.Success)
-                    {
-                        Snackbar.Add("Condomínio atualizado com sucesso!", Severity.Success);
-                        NavigationManager.NavigateTo("/condominios");
-                    }
-                    else
-                    {
-                        Snackbar.Add(result?.Message ?? "Erro ao atualizar condomínio", Severity.Error);
-                    }
+                    Snackbar.Add("Condomínio atualizado com sucesso!", Severity.Success);
+                    // Adicionamos StateHasChanged para garantir que a UI seja atualizada
+                    StateHasChanged();
+                    // Adicionamos um pequeno delay para garantir que a notificação seja exibida
+                    await Task.Delay(500);
+                    NavigationManager.NavigateTo("/condominios", forceLoad: true);
                 }
                 else
                 {
-                    var error = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-                    Snackbar.Add($"Erro ao atualizar: {error?.Detail ?? response.ReasonPhrase}", Severity.Error);
+                    Snackbar.Add(result.Message, Severity.Error);
                 }
             }
         }
@@ -276,7 +264,74 @@
         }
     }
 
-    // For convenience, here's our model class
+    // Validação para CNPJ
+    private string ValidateCNPJ(string cnpj)
+    {
+        if (string.IsNullOrWhiteSpace(cnpj))
+            return null;
+
+        // Remove formatação
+        cnpj = new string(cnpj.Where(char.IsDigit).ToArray());
+
+        if (cnpj.Length != 14)
+            return "CNPJ deve conter 14 dígitos";
+
+        // Validação de dígitos repetidos
+        bool allDigitsEqual = true;
+        for (int i = 1; i < cnpj.Length; i++)
+        {
+            if (cnpj[i] != cnpj[0])
+            {
+                allDigitsEqual = false;
+                break;
+            }
+        }
+
+        if (allDigitsEqual)
+            return "CNPJ inválido";
+
+        // Validação do primeiro dígito verificador
+        int[] multiplier1 = new int[12] { 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
+        int sum = 0;
+
+        for (int i = 0; i < 12; i++)
+            sum += int.Parse(cnpj[i].ToString()) * multiplier1[i];
+
+        int remainder = sum % 11;
+        int digit1 = remainder < 2 ? 0 : 11 - remainder;
+
+        if (int.Parse(cnpj[12].ToString()) != digit1)
+            return "CNPJ inválido";
+
+        // Validação do segundo dígito verificador
+        int[] multiplier2 = new int[13] { 6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
+        sum = 0;
+
+        for (int i = 0; i < 13; i++)
+            sum += int.Parse(cnpj[i].ToString()) * multiplier2[i];
+
+        remainder = sum % 11;
+        int digit2 = remainder < 2 ? 0 : 11 - remainder;
+
+        if (int.Parse(cnpj[13].ToString()) != digit2)
+            return "CNPJ inválido";
+
+        return null;
+    }
+
+    // Validação para Email
+    private string ValidateEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return null;
+
+        var isValid = System.Text.RegularExpressions.Regex.IsMatch(email,
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+
+        return isValid ? null : "Email inválido";
+    }
+
+    // Modelo para o formulário
     private class CondominioFormModel
     {
         public Guid? Id { get; set; }
@@ -287,30 +342,5 @@
         public string? TelefoneSindico { get; set; }
         public string? EmailSindico { get; set; }
         public bool Ativo { get; set; } = true;
-    }
-
-    // Email validator
-    private class EmailValidator
-    {
-        public string Validation(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-                return null;
-
-            var isValid = System.Text.RegularExpressions.Regex.IsMatch(email,
-                @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-
-            return isValid ? null : "Email inválido";
-        }
-    }
-
-    // For simplicity, adding this class here - in real app, it should be imported from a shared location
-    public class ProblemDetails
-    {
-        public string? Type { get; set; }
-        public string? Title { get; set; }
-        public int? Status { get; set; }
-        public string? Detail { get; set; }
-        public string? Instance { get; set; }
     }
 }

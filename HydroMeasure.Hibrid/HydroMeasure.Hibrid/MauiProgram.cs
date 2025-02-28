@@ -22,7 +22,14 @@ namespace HydroMeasure.Hibrid
 
             // Add device-specific services used by the HydroMeasure.Hibrid.Shared project
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
-
+            // Registrar serviço de API
+            builder.Services.AddScoped<IApiService, ApiService>();
+            // Registrar serviço de Condominio
+            builder.Services.AddScoped<ICondominioService, CondominioService>();
+            // Registrar serviços adicionais
+            builder.Services.AddScoped<IUnidadeService, UnidadeService>();
+            builder.Services.AddScoped<IAlertaService, AlertaService>();
+            builder.Services.AddScoped<IConfiguracaoCondominioService, ConfiguracaoCondominioService>();
             // Register HTTP client
             builder.Services.AddScoped(sp => new HttpClient
             {
