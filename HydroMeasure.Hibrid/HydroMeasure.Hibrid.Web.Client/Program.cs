@@ -22,7 +22,9 @@ builder.Services.AddScoped<IConfiguracaoCondominioService, ConfiguracaoCondomini
 builder.Services.AddScoped<IHidrometroService, HidrometroService>();
 // Registrar serviço de Leitura
 builder.Services.AddScoped<ILeituraService, LeituraService>();
-// Register HTTP client 
+// Registrar serviço de Configuração do Sistema
+builder.Services.AddScoped<IConfiguracaoSistemaService, ConfiguracaoSistemaService>();
+// Register HTTP client
 builder.Services.AddScoped(sp => new HttpClient
 {
     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)

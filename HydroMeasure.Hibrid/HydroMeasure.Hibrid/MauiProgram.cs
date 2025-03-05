@@ -36,6 +36,7 @@ namespace HydroMeasure.Hibrid
             builder.Services.AddScoped<IHidrometroService, HidrometroService>();
             // Registrar serviço de Leitura
             builder.Services.AddScoped<ILeituraService, LeituraService>();
+
             // Register HTTP client
             builder.Services.AddScoped(sp => new HttpClient
             {

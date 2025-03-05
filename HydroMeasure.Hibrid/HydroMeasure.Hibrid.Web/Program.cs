@@ -13,6 +13,8 @@ builder.Services.AddRazorComponents()
 
 // Add device-specific services used by the HydroMeasure.Hibrid.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
+// Registrar serviço de cache de memória
+builder.Services.AddMemoryCache();
 // Registrar serviço de API
 builder.Services.AddScoped<IApiService, ApiService>();
 // Registrar serviço de Condominio
@@ -27,6 +29,8 @@ builder.Services.AddScoped<IConfiguracaoCondominioService, ConfiguracaoCondomini
 builder.Services.AddScoped<IHidrometroService, HidrometroService>();
 // Registrar serviço de Leitura
 builder.Services.AddScoped<ILeituraService, LeituraService>();
+// Registrar serviço de Configuração do Sistema
+builder.Services.AddScoped<IConfiguracaoSistemaService, ConfiguracaoSistemaService>();
 // Register HTTP client
 builder.Services.AddScoped(sp => new HttpClient
 {

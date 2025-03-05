@@ -19,5 +19,4 @@ namespace HydroMeasure.Hibrid.WinUI
 
         protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
     }
-
 }

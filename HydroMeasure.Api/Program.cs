@@ -46,6 +46,8 @@ builder.Services.AddScoped<ILeituraRepository, LeituraRepository>();
 builder.Services.AddScoped<IConfiguracaoCondominioRepository, ConfiguracaoCondominioRepository>();
 builder.Services.AddScoped<IRelatorioRepository, RelatorioRepository>();
 builder.Services.AddScoped<IAlertaRepository, AlertaRepository>();
+builder.Services.AddScoped<IConfiguracaoSistemaRepository, ConfiguracaoSistemaRepository>();
+
 // Register other repositories here...
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 

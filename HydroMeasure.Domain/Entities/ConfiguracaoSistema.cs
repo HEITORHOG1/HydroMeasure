@@ -1,19 +1,43 @@
-﻿using HydroMeasure.Domain.Entities.Base;
+﻿using HydroMeasure.Domain.Common;
 
 namespace HydroMeasure.Domain.Entities
 {
-    public class ConfiguracaoSistema : EntityBase // Herda de EntityBase
+    public class ConfiguracaoSistema : BaseEntity
     {
-        public string NomeSistema { get; private set; }
-        public string VersaoSistema { get; private set; }
+        // Configurações gerais do sistema
+        public string Idioma { get; set; } = "pt-BR";
 
-        public ConfiguracaoSistema()
-        { }
+        public string Tema { get; set; } = "Padrão";
 
-        public ConfiguracaoSistema(string nomeSistema, string versaoSistema)
-        {
-            NomeSistema = nomeSistema;
-            VersaoSistema = versaoSistema;
-        }
+        // Configurações de notificação
+        public bool NotificacoesEmailHabilitadas { get; set; } = false;
+
+        public bool NotificacoesSmsHabilitadas { get; set; } = false;
+        public bool NotificacoesPushHabilitadas { get; set; } = false;
+
+        // Configurações de segurança
+        public int TentativasLoginMaximas { get; set; } = 5;
+
+        public int TempoBloqueioConta { get; set; } = 15; // Minutos
+
+        // Configurações de relatórios
+        public string FormatoPadraoRelatorio { get; set; } = "PDF";
+
+        public bool GerarRelatorioAutomatico { get; set; } = false;
+
+        // Configurações de medição
+        public decimal LimiteConsumoAlerta { get; set; } = 20; // m³
+
+        public int IntervaloAlertaConsumo { get; set; } = 30; // Dias
+
+        // Personalizações visuais
+        public string CorPrimariaPersonalizada { get; set; } = "#512BD4";
+
+        public string CorSecundariaPersonalizada { get; set; } = "#8A6FE8";
+
+        // Backup e sincronização
+        public bool BackupAutomaticoHabilitado { get; set; } = false;
+
+        public int FrequenciaBackup { get; set; } = 7; // Dias
     }
 }

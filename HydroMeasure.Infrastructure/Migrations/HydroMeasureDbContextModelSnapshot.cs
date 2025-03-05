@@ -150,20 +150,61 @@ namespace HydroMeasure.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("DataAlteracao")
-                        .HasColumnType("TEXT");
+                    b.Property<bool>("BackupAutomaticoHabilitado")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NomeSistema")
+                    b.Property<string>("CorPrimariaPersonalizada")
                         .IsRequired()
-                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("VersaoSistema")
+                    b.Property<string>("CorSecundariaPersonalizada")
                         .IsRequired()
-                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FormatoPadraoRelatorio")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FrequenciaBackup")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("GerarRelatorioAutomatico")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Idioma")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("IntervaloAlertaConsumo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("LimiteConsumoAlerta")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("NotificacoesEmailHabilitadas")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NotificacoesPushHabilitadas")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NotificacoesSmsHabilitadas")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tema")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TempoBloqueioConta")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TentativasLoginMaximas")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

@@ -386,18 +386,9 @@ namespace HydroMeasure.Infrastructure.Context
                 entity.ToTable("ConfiguracoesSistema");
                 entity.HasKey(e => e.Id);
 
-                entity.Property(e => e.NomeSistema)
+                entity.Property(e => e.Idioma)
                     .IsRequired()
-                    .HasMaxLength(200);
-
-                entity.Property(e => e.VersaoSistema)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.DataCadastro)
-                    .IsRequired();
-                entity.Property(e => e.DataAlteracao)
-                   .IsRequired();
+                    .HasMaxLength(10);
             });
         }
     }

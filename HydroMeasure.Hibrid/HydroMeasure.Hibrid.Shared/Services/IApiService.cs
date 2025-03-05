@@ -2,9 +2,9 @@
 {
     public interface IApiService
     {
-        Task<T?> GetAsync<T>(string endpoint);
+        Task<T?> GetAsync<T>(string endpoint, bool useCache = true, TimeSpan? cacheExpiration = null);
 
-        Task<List<T>?> GetListAsync<T>(string endpoint);
+        Task<List<T>?> GetListAsync<T>(string endpoint, bool useCache = true, TimeSpan? cacheExpiration = null);
 
         Task<HttpResponseMessage> PostAsync<T>(string endpoint, T data);
 
