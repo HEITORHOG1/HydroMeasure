@@ -21,7 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ----------------------------------------------------------------------------
 builder.Services.AddDbContext<HydroMeasureDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")));
-
+builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 // ----------------------------------------------------------------------------
 // MediatR Configuration
 // ----------------------------------------------------------------------------

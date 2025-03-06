@@ -8,7 +8,7 @@ namespace HydroMeasure.Hibrid.Shared.Services
     {
         private readonly IApiService _apiService;
         private readonly ILogger<ConfiguracaoSistemaService> _logger;
-        private const string BaseEndpoint = "api/configuracaosistema";
+        private const string BaseEndpoint = "api/ConfiguracaoSistema";
 
         // Tempo de expiração do cache para configurações do sistema (30 minutos)
         private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(30);

@@ -1,5 +1,6 @@
 ﻿using HydroMeasure.Hibrid.Services;
 using HydroMeasure.Hibrid.Shared.Services;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
@@ -19,6 +20,8 @@ namespace HydroMeasure.Hibrid
                     fonts.AddFont("Material-Design-Icons.ttf", "Material Design Icons");
                     fonts.AddFont("MaterialIcons-Regular.ttf", "Material Icons");
                 });
+            // Adicione no Program.cs da API antes de builder.Build()
+            builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
             // Add device-specific services used by the HydroMeasure.Hibrid.Shared project
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
@@ -40,7 +43,7 @@ namespace HydroMeasure.Hibrid
             // Register HTTP client
             builder.Services.AddScoped(sp => new HttpClient
             {
-                BaseAddress = new Uri("https://localhost:7212") // This should be your API URL
+                BaseAddress = new Uri("https://kb1746pc-7212.brs.devtunnels.ms") // This should be your API URL
             });
 
             // Register MudBlazor services

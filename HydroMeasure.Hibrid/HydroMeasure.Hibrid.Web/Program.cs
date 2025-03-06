@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
-
+builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 // Add device-specific services used by the HydroMeasure.Hibrid.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 // Registrar serviço de cache de memória
@@ -34,7 +34,7 @@ builder.Services.AddScoped<IConfiguracaoSistemaService, ConfiguracaoSistemaServi
 // Register HTTP client
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://localhost:7212") // This should be your API URL
+    BaseAddress = new Uri("https://kb1746pc-7212.brs.devtunnels.ms") // This should be your API URL
 });
 
 // Register MudBlazor services

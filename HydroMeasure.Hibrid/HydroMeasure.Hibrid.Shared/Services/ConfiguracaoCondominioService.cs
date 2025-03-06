@@ -5,7 +5,7 @@ namespace HydroMeasure.Hibrid.Shared.Services
     public class ConfiguracaoCondominioService : IConfiguracaoCondominioService
     {
         private readonly IApiService _apiService;
-        private const string BaseEndpoint = "api/configuracaocondominio";
+        private const string BaseEndpoint = "api/ConfiguracaoSistema";
 
         public ConfiguracaoCondominioService(IApiService apiService)
         {

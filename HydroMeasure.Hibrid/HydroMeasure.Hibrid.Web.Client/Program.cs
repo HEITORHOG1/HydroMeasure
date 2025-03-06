@@ -1,11 +1,12 @@
 ﻿using HydroMeasure.Hibrid.Shared.Services;
 using HydroMeasure.Hibrid.Web.Client.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Routing;
 using MudBlazor;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-
+builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 // Add device-specific services used by the HydroMeasure.Hibrid.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 // Registrar serviço de API
