@@ -1,8 +1,9 @@
 @page "/configuracoes"
+@rendermode InteractiveServer
 @using HydroMeasure.Hibrid.Shared.Model.Configuracao
 @using HydroMeasure.Hibrid.Shared.Services
-@using Microsoft.Extensions.Logging
 @using MudBlazor
+@using Microsoft.Extensions.Logging
 @inject IConfiguracaoSistemaService ConfiguracaoSistemaService
 @inject ISnackbar Snackbar
 @inject ILogger<Configuracoes> Logger
@@ -45,144 +46,124 @@
     }
     else
     {
-        <MudForm @ref="form" @bind-IsValid="@success">
-            <MudPaper Elevation="2" Class="pa-4">
-                <MudTabs Elevation="0"
-                         Rounded="true"
-                         ApplyEffectsToContainer="true"
-                         PanelClass="pa-6"
-                         @bind-ActivePanelIndex="activeTabIndex"
-                         Color="Color.Primary">
-                    <MudTabPanel Text="Geral">
-                        <MudGrid>
-                            <MudItem xs="12" sm="6">
-                                <MudSelect T="string" Label="Idioma" @bind-Value="configuracao.Idioma">
-                                    <MudSelectItem Value="@("pt-BR")">Português (Brasil)</MudSelectItem>
-                                    <MudSelectItem Value="@("en-US")">English (US)</MudSelectItem>
-                                    <MudSelectItem Value="@("es-ES")">Español</MudSelectItem>
-                                </MudSelect>
-                            </MudItem>
-                            <MudItem xs="12" sm="6">
-                                <MudSelect T="string" Label="Tema" @bind-Value="configuracao.Tema">
-                                    <MudSelectItem Value="@("Padrão")">Padrão</MudSelectItem>
-                                    <MudSelectItem Value="@("Escuro")">Escuro</MudSelectItem>
-                                    <MudSelectItem Value="@("Claro")">Claro</MudSelectItem>
-                                    <MudSelectItem Value="@("Personalizado")">Personalizado</MudSelectItem>
-                                </MudSelect>
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+            <MudTabPanel Text="Geral">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="string" Label="Idioma" @bind-Value="configuracao.Idioma">
+                            <MudSelectItem Value="@("pt-BR")">Português (Brasil)</MudSelectItem>
+                            <MudSelectItem Value="@("en-US")">English (US)</MudSelectItem>
+                            <MudSelectItem Value="@("es-ES")">Español</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="string" Label="Tema" @bind-Value="configuracao.Tema">
+                            <MudSelectItem Value="@("Padrão")">Padrão</MudSelectItem>
+                            <MudSelectItem Value="@("Escuro")">Escuro</MudSelectItem>
+                            <MudSelectItem Value="@("Claro")">Claro</MudSelectItem>
+                            <MudSelectItem Value="@("Personalizado")">Personalizado</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
 
-                    <MudTabPanel Text="Notificações">
-                        <MudGrid>
-                            <MudItem xs="12" sm="4">
-                                <MudSwitch @bind-Checked="configuracao.NotificacoesEmailHabilitadas" Color="Color.Primary" Label="Notificações por Email" />
-                            </MudItem>
-                            <MudItem xs="12" sm="4">
-                                <MudSwitch @bind-Checked="configuracao.NotificacoesSmsHabilitadas" Color="Color.Primary" Label="Notificações por SMS" />
-                            </MudItem>
-                            <MudItem xs="12" sm="4">
-                                <MudSwitch @bind-Checked="configuracao.NotificacoesPushHabilitadas" Color="Color.Primary" Label="Notificações Push" />
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
+            <MudTabPanel Text="Notificações">
+                <MudGrid>
+                    <MudItem xs="12" sm="4">
+                        <MudSwitch @bind-Checked="configuracao.NotificacoesEmailHabilitadas" Color="Color.Primary" Label="Notificações por Email" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudSwitch @bind-Checked="configuracao.NotificacoesSmsHabilitadas" Color="Color.Primary" Label="Notificações por SMS" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudSwitch @bind-Checked="configuracao.NotificacoesPushHabilitadas" Color="Color.Primary" Label="Notificações Push" />
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
 
-                    <MudTabPanel Text="Segurança">
-                        <MudGrid>
-                            <MudItem xs="12" sm="6">
-                                <MudNumericField @bind-Value="configuracao.TentativasLoginMaximas" Label="Tentativas de Login Máximas" Min="1" Max="10" />
-                            </MudItem>
-                            <MudItem xs="12" sm="6">
-                                <MudNumericField @bind-Value="configuracao.TempoBloqueioConta" Label="Tempo de Bloqueio da Conta (minutos)" Min="5" Max="60" />
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
+            <MudTabPanel Text="Segurança">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="configuracao.TentativasLoginMaximas" Label="Tentativas de Login Máximas" Min="1" Max="10" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="configuracao.TempoBloqueioConta" Label="Tempo de Bloqueio da Conta (minutos)" Min="5" Max="60" />
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
 
-                    <MudTabPanel Text="Relatórios">
-                        <MudGrid>
-                            <MudItem xs="12" sm="6">
-                                <MudSelect T="string" Label="Formato Padrão de Relatório" @bind-Value="configuracao.FormatoPadraoRelatorio">
-                                    <MudSelectItem Value="@("PDF")">PDF</MudSelectItem>
-                                    <MudSelectItem Value="@("Excel")">Excel</MudSelectItem>
-                                    <MudSelectItem Value="@("CSV")">CSV</MudSelectItem>
-                                </MudSelect>
-                            </MudItem>
-                            <MudItem xs="12" sm="6">
-                                <MudSwitch @bind-Checked="configuracao.GerarRelatorioAutomatico" Color="Color.Primary" Label="Gerar Relatório Automático" />
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
+            <MudTabPanel Text="Relatórios">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="string" Label="Formato Padrão de Relatório" @bind-Value="configuracao.FormatoPadraoRelatorio">
+                            <MudSelectItem Value="@("PDF")">PDF</MudSelectItem>
+                            <MudSelectItem Value="@("Excel")">Excel</MudSelectItem>
+                            <MudSelectItem Value="@("CSV")">CSV</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudSwitch @bind-Checked="configuracao.GerarRelatorioAutomatico" Color="Color.Primary" Label="Gerar Relatório Automático" />
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
 
-                    <MudTabPanel Text="Medição">
-                        <MudGrid>
-                            <MudItem xs="12" sm="6">
-                                <MudNumericField @bind-Value="configuracao.LimiteConsumoAlerta" Label="Limite de Consumo para Alerta (m³)" Min="1" />
-                            </MudItem>
-                            <MudItem xs="12" sm="6">
-                                <MudNumericField @bind-Value="configuracao.IntervaloAlertaConsumo" Label="Intervalo de Alerta de Consumo (dias)" Min="1" Max="90" />
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
+            <MudTabPanel Text="Medição">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="configuracao.LimiteConsumoAlerta" Label="Limite de Consumo para Alerta (m³)" Min="1" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="configuracao.IntervaloAlertaConsumo" Label="Intervalo de Alerta de Consumo (dias)" Min="1" Max="90" />
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
 
-                    <MudTabPanel Text="Personalização Visual">
-                        <MudGrid>
-                            <MudItem xs="12" sm="6">
-                                <MudColorPicker @bind-Text="configuracao.CorPrimariaPersonalizada" Label="Cor Primária" />
-                            </MudItem>
-                            <MudItem xs="12" sm="6">
-                                <MudColorPicker @bind-Text="configuracao.CorSecundariaPersonalizada" Label="Cor Secundária" />
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
+            <MudTabPanel Text="Personalização Visual">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudColorPicker @bind-Text="configuracao.CorPrimariaPersonalizada" Label="Cor Primária" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudColorPicker @bind-Text="configuracao.CorSecundariaPersonalizada" Label="Cor Secundária" />
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
 
-                    <MudTabPanel Text="Backup">
-                        <MudGrid>
-                            <MudItem xs="12" sm="6">
-                                <MudSwitch @bind-Checked="configuracao.BackupAutomaticoHabilitado" Color="Color.Primary" Label="Backup Automático Habilitado" />
-                            </MudItem>
-                            <MudItem xs="12" sm="6">
-                                <MudNumericField @bind-Value="configuracao.FrequenciaBackup" Label="Frequência de Backup (dias)" Min="1" Max="30" />
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
-                </MudTabs>
+            <MudTabPanel Text="Backup">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudSwitch @bind-Checked="configuracao.BackupAutomaticoHabilitado" Color="Color.Primary" Label="Backup Automático Habilitado" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="configuracao.FrequenciaBackup" Label="Frequência de Backup (dias)" Min="1" Max="30" />
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+        </MudTabs>
 
-                <div class="d-flex justify-end mt-4">
-                    <MudButton Color="Color.Secondary"
-                               Variant="Variant.Filled"
-                               OnClick="ResetarConfiguracoes"
-                               Class="mr-2"
-                               Disabled="@(isLoading)">
-                        Resetar Configurações
-                    </MudButton>
-                    <MudButton Color="Color.Primary"
-                               Variant="Variant.Filled"
-                               OnClick="SalvarConfiguracoes"
-                               Disabled="@(!success || isLoading)">
-                        @if (isLoading)
-                        {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Salvando...</MudText>
-                        }
-                        else
-                        {
-                            <MudText>Salvar Configurações</MudText>
-                        }
-                    </MudButton>
-                </div>
-            </MudPaper>
-        </MudForm>
+        <div class="d-flex justify-end mt-4">
+            <MudButton Color="Color.Secondary" 
+                      Variant="Variant.Filled" 
+                      OnClick="ResetarConfiguracoes" 
+                      Class="mr-2">
+                Resetar Configurações
+            </MudButton>
+            <MudButton Color="Color.Primary" 
+                      Variant="Variant.Filled" 
+                      OnClick="SalvarConfiguracoes">
+                Salvar Configurações
+            </MudButton>
+        </div>
     }
 </MudContainer>
 
 @code {
     private ConfiguracaoSistemaDto? configuracao;
     private bool isLoading = true;
-    private bool success = false;
+    private bool success = true;
     private string? errorMessage;
     private Exception? lastException;
     private MudForm? form;
-    private int activeTabIndex = 0; // Adicionada propriedade para controlar a aba ativa
 
     protected override async Task OnInitializedAsync()
     {
