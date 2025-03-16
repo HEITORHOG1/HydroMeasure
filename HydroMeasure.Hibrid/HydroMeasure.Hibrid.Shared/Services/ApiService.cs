@@ -47,17 +47,26 @@ namespace HydroMeasure.Hibrid.Shared.Services
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<T>(content, _jsonOptions);
+                _logger.LogDebug("Resposta recebida de {Endpoint}: {Content}", endpoint, content);
+                
+                try {
+                    var result = JsonSerializer.Deserialize<T>(content, _jsonOptions);
 
-                // Armazenar em cache se habilitado
-                if (useCache && result != null)
-                {
-                    var expiration = cacheExpiration ?? TimeSpan.FromMinutes(5);
-                    AddToCache(cacheKey, result, expiration);
-                    _logger.LogDebug("Cached result for {Endpoint} with expiration {Expiration}", endpoint, expiration);
+                    // Armazenar em cache se habilitado
+                    if (useCache && result != null)
+                    {
+                        var expiration = cacheExpiration ?? TimeSpan.FromMinutes(5);
+                        AddToCache(cacheKey, result, expiration);
+                        _logger.LogDebug("Cached result for {Endpoint} with expiration {Expiration}", endpoint, expiration);
+                    }
+
+                    return result;
                 }
-
-                return result;
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "JSON deserialization error in GET {Endpoint}: {Message}. Content: {Content}", endpoint, ex.Message, content);
+                    throw new ApiException("Erro ao processar resposta da API: " + ex.Message, ex, HttpStatusCode.UnprocessableEntity);
+                }
             }
             catch (HttpRequestException ex)
             {
@@ -67,7 +76,7 @@ namespace HydroMeasure.Hibrid.Shared.Services
             catch (JsonException ex)
             {
                 _logger.LogError(ex, "JSON deserialization error in GET {Endpoint}: {Message}", endpoint, ex.Message);
-                throw new ApiException("Erro ao processar resposta da API", ex, HttpStatusCode.UnprocessableEntity);
+                throw new ApiException("Erro ao processar resposta da API: " + ex.Message, ex, HttpStatusCode.UnprocessableEntity);
             }
             catch (Exception ex)
             {
