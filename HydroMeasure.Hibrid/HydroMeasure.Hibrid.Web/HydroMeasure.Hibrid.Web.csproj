@@ -8,7 +8,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HydroMeasure.Hibrid.Web.Client\HydroMeasure.Hibrid.Web.Client.csproj" />
+    <ProjectReference Include="..\HydroMeasure.Hibrid.Shared\HydroMeasure.Hibrid.Shared.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.0" />
+    <PackageReference Include="MudBlazor" Version="6.19.2" />
   </ItemGroup>
 
 </Project>

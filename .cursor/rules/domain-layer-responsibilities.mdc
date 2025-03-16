@@ -1,0 +1,49 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Regras da Camada Domain
+
+## Propósito
+A camada Domain é o núcleo da aplicação e implementa as regras de negócio fundamentais do sistema.
+
+## Responsabilidades
+- Conter apenas entidades de domínio
+- Definir agregados e suas relações
+- Implementar objetos de valor (Value Objects)
+- Conter regras de negócio puras
+- Definir interfaces de repositórios (sem implementações)
+- Não ter dependências de camadas externas
+
+## Nomenclatura
+- Entidades: Nomes claros e substantivos (ex: Usuario, Medida, Dispositivo)
+- Interfaces de repositório: I + Nome + Repository (ex: IUsuarioRepository)
+- Value Objects: Nomes que representem o conceito (ex: Email, CPF, Coordenada)
+
+
+## Padrões a seguir
+- Entidades com identidade própria
+- Value Objects imutáveis
+- Agregados bem definidos com raízes claras
+- Domain Services quando necessário para operações que não pertencem naturalmente a uma entidade
+
+## Anti-padrões a evitar
+- Lógica de banco de dados na camada Domain
+- Dependências de infraestrutura
+- Acoplamento com frameworks externos
+- Acesso direto a serviços externos
+
+## Manutenção do Contexto
+- Nunca implemente soluções que fujam do contexto do projeto
+- Mantenha-se sempre alinhado com o modelo de domínio estabelecido
+- Evite generalizar conceitos específicos do domínio
+- Proteja os limites do contexto (bounded context)
+- Questione quando um conceito parece não se encaixar no modelo existente
+
+## Comunicação e Dúvidas
+- Sempre pergunte quando houver dúvidas sobre implementações
+- Busque esclarecimentos sobre regras de negócio antes de implementá-las
+- Valide suposições com a equipe antes de tomar decisões importantes
+- Documente decisões de design quando introduzir novos conceitos ao domínio
+- Submeta a revisão de código quando implementar conceitos críticos

@@ -1,9 +1,12 @@
 @page "/configuracoes"
 @using HydroMeasure.Hibrid.Shared.Model.Configuracao
 @using HydroMeasure.Hibrid.Shared.Services
+@using Microsoft.Extensions.Logging
 @using MudBlazor
 @inject IConfiguracaoSistemaService ConfiguracaoSistemaService
 @inject ISnackbar Snackbar
+@inject ILogger<Configuracoes> Logger
+@inject IDialogService DialogService
 
 <PageTitle>Configurações do Sistema</PageTitle>
 
@@ -13,121 +16,162 @@
     @if (isLoading)
     {
         <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText Class="ml-4">Carregando configurações...</MudText>
+    }
+    else if (errorMessage != null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4">
+            @errorMessage
+            @if (lastException != null)
+            {
+                <MudText Typo="Typo.body2" Class="mt-2">Detalhes: @lastException.Message</MudText>
+            }
+        </MudAlert>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CriarConfiguracaoPadrao" Class="mt-4 mr-2">
+            Criar Configuração Padrão
+        </MudButton>
+        <MudButton Color="Color.Secondary" Variant="Variant.Filled" OnClick="TentarNovamente" Class="mt-4">
+            Tentar Novamente
+        </MudButton>
     }
     else if (configuracao == null)
     {
-        <MudAlert Severity="Severity.Error">Não foi possível carregar as configurações.</MudAlert>
+        <MudAlert Severity="Severity.Info" Class="mb-4">
+            Nenhuma configuração encontrada. Você pode criar uma configuração padrão para começar.
+        </MudAlert>
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CriarConfiguracaoPadrao" Class="mt-4">
             Criar Configuração Padrão
         </MudButton>
     }
     else
     {
-        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-            <MudTabPanel Text="Geral">
-                <MudForm @ref="form" @bind-IsValid="@success">
-                    <MudGrid>
-                        <MudItem xs="12" sm="6">
-                            <MudSelect T="string" Label="Idioma" @bind-Value="configuracao.Idioma">
-                                <MudSelectItem Value="@("pt-BR")">Português (Brasil)</MudSelectItem>
-                                <MudSelectItem Value="@("en-US")">English (US)</MudSelectItem>
-                                <MudSelectItem Value="@("es-ES")">Español</MudSelectItem>
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudSelect T="string" Label="Tema" @bind-Value="configuracao.Tema">
-                                <MudSelectItem Value="@("Padrão")">Padrão</MudSelectItem>
-                                <MudSelectItem Value="@("Escuro")">Escuro</MudSelectItem>
-                                <MudSelectItem Value="@("Claro")">Claro</MudSelectItem>
-                                <MudSelectItem Value="@("Personalizado")">Personalizado</MudSelectItem>
-                            </MudSelect>
-                        </MudItem>
-                    </MudGrid>
-                </MudForm>
-            </MudTabPanel>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudTabs Elevation="0"
+                         Rounded="true"
+                         ApplyEffectsToContainer="true"
+                         PanelClass="pa-6"
+                         @bind-ActivePanelIndex="activeTabIndex"
+                         Color="Color.Primary">
+                    <MudTabPanel Text="Geral">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudSelect T="string" Label="Idioma" @bind-Value="configuracao.Idioma">
+                                    <MudSelectItem Value="@("pt-BR")">Português (Brasil)</MudSelectItem>
+                                    <MudSelectItem Value="@("en-US")">English (US)</MudSelectItem>
+                                    <MudSelectItem Value="@("es-ES")">Español</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudSelect T="string" Label="Tema" @bind-Value="configuracao.Tema">
+                                    <MudSelectItem Value="@("Padrão")">Padrão</MudSelectItem>
+                                    <MudSelectItem Value="@("Escuro")">Escuro</MudSelectItem>
+                                    <MudSelectItem Value="@("Claro")">Claro</MudSelectItem>
+                                    <MudSelectItem Value="@("Personalizado")">Personalizado</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
 
-            <MudTabPanel Text="Notificações">
-                <MudGrid>
-                    <MudItem xs="12" sm="4">
-                        <MudSwitch @bind-Checked="configuracao.NotificacoesEmailHabilitadas" Color="Color.Primary" Label="Notificações por Email" />
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudSwitch @bind-Checked="configuracao.NotificacoesSmsHabilitadas" Color="Color.Primary" Label="Notificações por SMS" />
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudSwitch @bind-Checked="configuracao.NotificacoesPushHabilitadas" Color="Color.Primary" Label="Notificações Push" />
-                    </MudItem>
-                </MudGrid>
-            </MudTabPanel>
+                    <MudTabPanel Text="Notificações">
+                        <MudGrid>
+                            <MudItem xs="12" sm="4">
+                                <MudSwitch @bind-Checked="configuracao.NotificacoesEmailHabilitadas" Color="Color.Primary" Label="Notificações por Email" />
+                            </MudItem>
+                            <MudItem xs="12" sm="4">
+                                <MudSwitch @bind-Checked="configuracao.NotificacoesSmsHabilitadas" Color="Color.Primary" Label="Notificações por SMS" />
+                            </MudItem>
+                            <MudItem xs="12" sm="4">
+                                <MudSwitch @bind-Checked="configuracao.NotificacoesPushHabilitadas" Color="Color.Primary" Label="Notificações Push" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
 
-            <MudTabPanel Text="Segurança">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="configuracao.TentativasLoginMaximas" Label="Tentativas de Login Máximas" Min="1" Max="10" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="configuracao.TempoBloqueioConta" Label="Tempo de Bloqueio da Conta (minutos)" Min="5" Max="60" />
-                    </MudItem>
-                </MudGrid>
-            </MudTabPanel>
+                    <MudTabPanel Text="Segurança">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudNumericField @bind-Value="configuracao.TentativasLoginMaximas" Label="Tentativas de Login Máximas" Min="1" Max="10" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudNumericField @bind-Value="configuracao.TempoBloqueioConta" Label="Tempo de Bloqueio da Conta (minutos)" Min="5" Max="60" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
 
-            <MudTabPanel Text="Relatórios">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudSelect T="string" Label="Formato Padrão de Relatório" @bind-Value="configuracao.FormatoPadraoRelatorio">
-                            <MudSelectItem Value="@("PDF")">PDF</MudSelectItem>
-                            <MudSelectItem Value="@("Excel")">Excel</MudSelectItem>
-                            <MudSelectItem Value="@("CSV")">CSV</MudSelectItem>
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudSwitch @bind-Checked="configuracao.GerarRelatorioAutomatico" Color="Color.Primary" Label="Gerar Relatório Automático" />
-                    </MudItem>
-                </MudGrid>
-            </MudTabPanel>
+                    <MudTabPanel Text="Relatórios">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudSelect T="string" Label="Formato Padrão de Relatório" @bind-Value="configuracao.FormatoPadraoRelatorio">
+                                    <MudSelectItem Value="@("PDF")">PDF</MudSelectItem>
+                                    <MudSelectItem Value="@("Excel")">Excel</MudSelectItem>
+                                    <MudSelectItem Value="@("CSV")">CSV</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudSwitch @bind-Checked="configuracao.GerarRelatorioAutomatico" Color="Color.Primary" Label="Gerar Relatório Automático" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
 
-            <MudTabPanel Text="Medição">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="configuracao.LimiteConsumoAlerta" Label="Limite de Consumo para Alerta (m³)" Min="1" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="configuracao.IntervaloAlertaConsumo" Label="Intervalo de Alerta de Consumo (dias)" Min="1" Max="90" />
-                    </MudItem>
-                </MudGrid>
-            </MudTabPanel>
+                    <MudTabPanel Text="Medição">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudNumericField @bind-Value="configuracao.LimiteConsumoAlerta" Label="Limite de Consumo para Alerta (m³)" Min="1" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudNumericField @bind-Value="configuracao.IntervaloAlertaConsumo" Label="Intervalo de Alerta de Consumo (dias)" Min="1" Max="90" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
 
-            <MudTabPanel Text="Personalização Visual">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudColorPicker @bind-Text="configuracao.CorPrimariaPersonalizada" Label="Cor Primária" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudColorPicker @bind-Text="configuracao.CorSecundariaPersonalizada" Label="Cor Secundária" />
-                    </MudItem>
-                </MudGrid>
-            </MudTabPanel>
+                    <MudTabPanel Text="Personalização Visual">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudColorPicker @bind-Text="configuracao.CorPrimariaPersonalizada" Label="Cor Primária" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudColorPicker @bind-Text="configuracao.CorSecundariaPersonalizada" Label="Cor Secundária" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
 
-            <MudTabPanel Text="Backup">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudSwitch @bind-Checked="configuracao.BackupAutomaticoHabilitado" Color="Color.Primary" Label="Backup Automático Habilitado" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="configuracao.FrequenciaBackup" Label="Frequência de Backup (dias)" Min="1" Max="30" />
-                    </MudItem>
-                </MudGrid>
-            </MudTabPanel>
-        </MudTabs>
+                    <MudTabPanel Text="Backup">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudSwitch @bind-Checked="configuracao.BackupAutomaticoHabilitado" Color="Color.Primary" Label="Backup Automático Habilitado" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudNumericField @bind-Value="configuracao.FrequenciaBackup" Label="Frequência de Backup (dias)" Min="1" Max="30" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+                </MudTabs>
 
-        <div class="d-flex justify-end mt-4">
-            <MudButton Color="Color.Secondary" Variant="Variant.Filled" OnClick="ResetarConfiguracoes" Class="mr-2">
-                Resetar Configurações
-            </MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SalvarConfiguracoes" Disabled="@(!success)">
-                Salvar Configurações
-            </MudButton>
-        </div>
+                <div class="d-flex justify-end mt-4">
+                    <MudButton Color="Color.Secondary"
+                               Variant="Variant.Filled"
+                               OnClick="ResetarConfiguracoes"
+                               Class="mr-2"
+                               Disabled="@(isLoading)">
+                        Resetar Configurações
+                    </MudButton>
+                    <MudButton Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               OnClick="SalvarConfiguracoes"
+                               Disabled="@(!success || isLoading)">
+                        @if (isLoading)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Salvando...</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Salvar Configurações</MudText>
+                        }
+                    </MudButton>
+                </div>
+            </MudPaper>
+        </MudForm>
     }
 </MudContainer>
 
@@ -135,7 +179,10 @@
     private ConfiguracaoSistemaDto? configuracao;
     private bool isLoading = true;
     private bool success = false;
+    private string? errorMessage;
+    private Exception? lastException;
     private MudForm? form;
+    private int activeTabIndex = 0; // Adicionada propriedade para controlar a aba ativa
 
     protected override async Task OnInitializedAsync()
     {
@@ -145,45 +192,111 @@
     private async Task CarregarConfiguracoes()
     {
         isLoading = true;
+        errorMessage = null;
+        lastException = null;
+
         try
         {
+            Logger.LogInformation("Iniciando carregamento das configurações");
             configuracao = await ConfiguracaoSistemaService.GetConfiguracaoSistemaAsync();
+            
+            if (configuracao == null)
+            {
+                Logger.LogWarning("Nenhuma configuração encontrada");
+                errorMessage = "Nenhuma configuração encontrada no sistema.";
+            }
+            else
+            {
+                Logger.LogInformation("Configurações carregadas com sucesso");
+            }
+        }
+        catch (ApiException ex)
+        {
+            Logger.LogError(ex, "Erro de API ao carregar configurações");
+            errorMessage = $"Erro ao carregar configurações: {ex.Message}";
+            lastException = ex;
+            configuracao = null;
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Erro ao carregar configurações: {ex.Message}", Severity.Error);
+            Logger.LogError(ex, "Erro inesperado ao carregar configurações");
+            errorMessage = "Ocorreu um erro inesperado ao carregar as configurações.";
+            lastException = ex;
+            configuracao = null;
         }
         finally
         {
             isLoading = false;
+            StateHasChanged();
         }
+    }
+
+    private async Task TentarNovamente()
+    {
+        await CarregarConfiguracoes();
     }
 
     private async Task CriarConfiguracaoPadrao()
     {
         isLoading = true;
+        errorMessage = null;
+        lastException = null;
+
         try
         {
-            var command = new CreateConfiguracaoSistemaCommand();
+            Logger.LogInformation("Criando configurações padrão");
+            var command = new CreateConfiguracaoSistemaCommand
+            {
+                Idioma = "pt-BR",
+                Tema = "Padrão",
+                NotificacoesEmailHabilitadas = true,
+                NotificacoesSmsHabilitadas = false,
+                NotificacoesPushHabilitadas = true,
+                TentativasLoginMaximas = 3,
+                TempoBloqueioConta = 15,
+                FormatoPadraoRelatorio = "PDF",
+                GerarRelatorioAutomatico = false,
+                LimiteConsumoAlerta = 100,
+                IntervaloAlertaConsumo = 30,
+                CorPrimariaPersonalizada = "#1976D2",
+                CorSecundariaPersonalizada = "#424242",
+                BackupAutomaticoHabilitado = true,
+                FrequenciaBackup = 7
+            };
+
             var result = await ConfiguracaoSistemaService.CreateConfiguracaoSistemaAsync(command);
             
             if (result.Success)
             {
+                Logger.LogInformation("Configurações padrão criadas com sucesso");
                 configuracao = result.Data;
                 Snackbar.Add("Configurações padrão criadas com sucesso!", Severity.Success);
             }
             else
             {
+                Logger.LogWarning("Erro ao criar configurações padrão: {Message}", result.Message);
+                errorMessage = $"Erro ao criar configurações: {result.Message}";
                 Snackbar.Add($"Erro ao criar configurações: {result.Message}", Severity.Error);
             }
         }
+        catch (ApiException ex)
+        {
+            Logger.LogError(ex, "Erro de API ao criar configurações padrão");
+            errorMessage = $"Erro ao criar configurações: {ex.Message}";
+            lastException = ex;
+            Snackbar.Add($"Erro ao criar configurações: {ex.Message}", Severity.Error);
+        }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Erro inesperado ao criar configurações padrão");
+            errorMessage = "Ocorreu um erro inesperado ao criar as configurações.";
+            lastException = ex;
             Snackbar.Add($"Erro ao criar configurações: {ex.Message}", Severity.Error);
         }
         finally
         {
             isLoading = false;
+            StateHasChanged();
         }
     }
 
@@ -194,6 +307,7 @@
         isLoading = true;
         try
         {
+            Logger.LogInformation("Salvando configurações do sistema");
             var command = new UpdateConfiguracaoSistemaCommand
             {
                 Id = configuracao.Id,
@@ -218,48 +332,85 @@
             
             if (result.Success)
             {
+                Logger.LogInformation("Configurações salvas com sucesso");
                 configuracao = result.Data;
                 Snackbar.Add("Configurações salvas com sucesso!", Severity.Success);
             }
             else
             {
+                Logger.LogWarning("Erro ao salvar configurações: {Message}", result.Message);
                 Snackbar.Add($"Erro ao salvar configurações: {result.Message}", Severity.Error);
             }
         }
+        catch (ApiException ex)
+        {
+            Logger.LogError(ex, "Erro de API ao salvar configurações");
+            Snackbar.Add($"Erro ao salvar configurações: {ex.Message}", Severity.Error);
+        }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Erro inesperado ao salvar configurações");
             Snackbar.Add($"Erro ao salvar configurações: {ex.Message}", Severity.Error);
         }
         finally
         {
             isLoading = false;
+            StateHasChanged();
         }
     }
 
     private async Task ResetarConfiguracoes()
     {
-        isLoading = true;
-        try
+        var parameters = new DialogParameters();
+        var options = new DialogOptions
         {
-            var result = await ConfiguracaoSistemaService.ResetConfiguracaoSistemaAsync();
-            
-            if (result.Success)
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center
+        };
+
+        var dialog = await DialogService.ShowMessageBox(
+            "Confirmar Reset",
+            "Tem certeza que deseja resetar todas as configurações para os valores padrão?",
+            yesText: "Sim",
+            noText: "Não",
+            options: options);
+
+        if (dialog ?? false)
+        {
+            isLoading = true;
+            try
             {
-                await CarregarConfiguracoes();
-                Snackbar.Add("Configurações resetadas com sucesso!", Severity.Success);
+                Logger.LogInformation("Resetando configurações do sistema");
+                var result = await ConfiguracaoSistemaService.ResetConfiguracaoSistemaAsync();
+                
+                if (result.Success)
+                {
+                    Logger.LogInformation("Configurações resetadas com sucesso");
+                    await CarregarConfiguracoes();
+                    Snackbar.Add("Configurações resetadas com sucesso!", Severity.Success);
+                }
+                else
+                {
+                    Logger.LogWarning("Erro ao resetar configurações: {Message}", result.Message);
+                    Snackbar.Add($"Erro ao resetar configurações: {result.Message}", Severity.Error);
+                }
             }
-            else
+            catch (ApiException ex)
             {
-                Snackbar.Add($"Erro ao resetar configurações: {result.Message}", Severity.Error);
+                Logger.LogError(ex, "Erro de API ao resetar configurações");
+                Snackbar.Add($"Erro ao resetar configurações: {ex.Message}", Severity.Error);
             }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Erro ao resetar configurações: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isLoading = false;
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Erro inesperado ao resetar configurações");
+                Snackbar.Add($"Erro ao resetar configurações: {ex.Message}", Severity.Error);
+            }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
         }
     }
 } 

@@ -2,34 +2,35 @@
 using HydroMeasure.Hibrid.Web.Client.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+// Configurar logging
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
+
 // Add device-specific services used by the HydroMeasure.Hibrid.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
-// Registrar serviço de API
-builder.Services.AddScoped<IApiService, ApiService>();
-// Registrar serviço de Condominio
-builder.Services.AddScoped<ICondominioService, CondominioService>();
-// Registrar serviços adicionais
-builder.Services.AddScoped<IUnidadeService, UnidadeService>();
-// Registrar serviço de Alerta
-builder.Services.AddScoped<IAlertaService, AlertaService>();
-// Registrar serviço de Configuração de Condomínio
-builder.Services.AddScoped<IConfiguracaoCondominioService, ConfiguracaoCondominioService>();
-// Registrar serviço de Hidrômetro
-builder.Services.AddScoped<IHidrometroService, HidrometroService>();
-// Registrar serviço de Leitura
-builder.Services.AddScoped<ILeituraService, LeituraService>();
-// Registrar serviço de Configuração do Sistema
-builder.Services.AddScoped<IConfiguracaoSistemaService, ConfiguracaoSistemaService>();
-// Register HTTP client
+
+// Register HTTP client with base address
 builder.Services.AddScoped(sp => new HttpClient
 {
     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
 });
+
+// Registrar serviços da aplicação
+builder.Services.AddScoped<IApiService, ApiService>();
+builder.Services.AddScoped<ICondominioService, CondominioService>();
+builder.Services.AddScoped<IUnidadeService, UnidadeService>();
+builder.Services.AddScoped<IAlertaService, AlertaService>();
+builder.Services.AddScoped<IConfiguracaoCondominioService, ConfiguracaoCondominioService>();
+builder.Services.AddScoped<IHidrometroService, HidrometroService>();
+builder.Services.AddScoped<ILeituraService, LeituraService>();
+builder.Services.AddScoped<IConfiguracaoSistemaService, ConfiguracaoSistemaService>();
 
 // Register MudBlazor services
 builder.Services.AddMudServices(config =>
